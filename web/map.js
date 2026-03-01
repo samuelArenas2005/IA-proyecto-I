@@ -1,0 +1,512 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ══════════════════════════════════════════════════════════════
+   map.js – Ciudad isométrica 10×10  (Three.js)
+   Vista isométrica tipo SimCity / Habbo Hotel
+   Iluminación brillante y colores saturados
+══════════════════════════════════════════════════════════════ */
+
+const TILE   = 2;
+const GRID   = 10;
+const OFFSET = (GRID * TILE) / 2;
+
+// ── Paletas ───────────────────────────────────────────────────────────────────
+const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
+const CAR_PALETTE      = [0xff6b6b, 0xffa94d, 0x69db7c, 0x74c0fc, 0xf783ac];
+const ROAD_COLOR       = 0x343a50;
+const ROAD_MARK        = 0xffd43b;
+const SIDEWALK_COLOR   = 0x464d6a;
+const GROUND_COLOR     = 0x1c1f38;
+
+// ── Posiciones de parque (coordenadas fijas, máx 2 en todo el mapa) ────────────
+// Cambia estos valores para mover los parques a otras celdas con valor 1
+const PARK_POSITIONS = new Set(['1,1', '6,8']);
+function isPark(row, col) { return PARK_POSITIONS.has(`${row},${col}`); }
+
+// ── Presets de hora del día ────────────────────────────────────────────────────
+let currentTimeIdx = 1; // 0=amanecer 1=día 2=atardecer 3=noche
+let isLightMode = false; // controla si el tema es claro
+const TIME_PRESETS = [
+  { // 0 – Amaneciendo
+    label: '🌅 Amaneciendo', icon: '🌅', shortLabel: 'Amanecer',
+    bg:       0x160a14,  fogColor: 0x2d1015,
+    lightBg:  0xffd4a8,  lightFog: 0xffd4a8,
+    ambColor: 0xff9a4a,  ambInt:   0.55,
+    sunColor: 0xff8c00,  sunInt:   1.1,  sunPos: [5,  12, 35],
+    filColor: 0xff6b6b,  filInt:   0.35,
+    rimColor: 0x12082a,  rimInt:   0.1,
+    winInt:   0.55,
+  },
+  { // 1 – Mañana / Tarde
+    label: '☀️ Mañana · Tarde', icon: '☀️', shortLabel: 'Día',
+    bg:       0x1a1d33,  fogColor: 0x1a1d33,
+    lightBg:  0xc8dff7,  lightFog: 0xd8ecff,
+    ambColor: 0xffffff,  ambInt:   1.4,
+    sunColor: 0xfff8e7,  sunInt:   2.0,  sunPos: [25, 40, 20],
+    filColor: 0xaad4ff,  filInt:   0.8,
+    rimColor: 0xffd6a5,  rimInt:   0.5,
+    winInt:   0.05,
+  },
+  { // 2 – Anocheciendo
+    label: '🌆 Anocheciendo', icon: '🌆', shortLabel: 'Atardecer',
+    bg:       0x0d0818,  fogColor: 0x12081e,
+    lightBg:  0xffb4c8,  lightFog: 0xffc4d4,
+    ambColor: 0xc86dff,  ambInt:   0.3,
+    sunColor: 0xff4500,  sunInt:   0.65, sunPos: [35,  6, 20],
+    filColor: 0x8b44cc,  filInt:   0.45,
+    rimColor: 0xff7700,  rimInt:   0.2,
+    winInt:   0.75,
+  },
+  { // 3 – Noche
+    label: '🌙 Noche', icon: '🌙', shortLabel: 'Noche',
+    bg:       0x050710,  fogColor: 0x050710,
+    lightBg:  0x8898c8,  lightFog: 0x9aaad8,
+    ambColor: 0x1030a0,  ambInt:   0.12,
+    sunColor: 0x3050d0,  sunInt:   0.15, sunPos: [-10, 25, -15],
+    filColor: 0x050a30,  filInt:   0.08,
+    rimColor: 0x02040a,  rimInt:   0.03,
+    winInt:   1.3,
+  },
+];
+
+// ── Geometrías compartidas ────────────────────────────────────────────────────
+function geo(type, ...args) { return new THREE[type + 'Geometry'](...args); }
+const G = {
+  road:       geo('Box', TILE * .99, .1, TILE * .99),
+  mark:       geo('Box', .07, .01, .6),
+  sidewalk:   geo('Box', TILE * .92, .14, TILE * .92),
+  bldBase:    geo('Box', TILE * .88, .12, TILE * .88),
+  roof:       geo('Box', TILE * .72, .09, TILE * .72),
+  window:     geo('Box', .14, .14, .025),
+  carBody:    geo('Box', .58, .2, .34),
+  carTop:     geo('Box', .34, .15, .28),
+  headlight:  geo('Box', .06, .06, .06),
+  wheel:      new THREE.CylinderGeometry(.065, .065, .07, 8),
+  personBody: new THREE.CylinderGeometry(.06, .075, .24, 8),
+  personHead: new THREE.SphereGeometry(.095, 8, 7),
+  pole:       new THREE.CylinderGeometry(.03, .03, .9, 8),
+  flag:       geo('Box', .42, .24, .03),
+  ring:       new THREE.TorusGeometry(TILE * .29, .045, 8, 28),
+  marker:     new THREE.CircleGeometry(TILE * .28, 20),
+  ground:     geo('Plane', GRID * TILE + 4, GRID * TILE + 4),
+  startArrow: new THREE.ConeGeometry(.2, .5, 3),
+};
+
+// ── Helper: Mesh ──────────────────────────────────────────────────────────────
+function m(geometry, color, opts = {}) {
+  const mat = new THREE.MeshLambertMaterial({ color, ...opts });
+  return new THREE.Mesh(geometry, mat);
+}
+function em(geometry, color, intensity = .8) {
+  return m(geometry, color, { emissive: color, emissiveIntensity: intensity });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  CONSTRUCTORES DE TILES
+// ──────────────────────────────────────────────────────────────────────────────
+
+function roadBase() {
+  const g = new THREE.Group();
+  const road = m(G.road, ROAD_COLOR); road.position.y = .05; g.add(road);
+  const mk   = em(G.mark, ROAD_MARK, .5); mk.position.y = .11; g.add(mk);
+  return g;
+}
+
+function buildingTile(row, col) {
+  const g = new THREE.Group();
+
+  // acera / base
+  const sw = m(G.sidewalk, SIDEWALK_COLOR); sw.position.y = .07; g.add(sw);
+
+  // cuerpo del edificio
+  const height   = 1.2 + ((row * 13 + col * 7) % 3) * .9;  // 1.2 – 2.9
+  const colorIdx = (row * 3 + col * 5) % BUILDING_PALETTE.length;
+  const color    = BUILDING_PALETTE[colorIdx];
+  const bGeo     = new THREE.BoxGeometry(TILE * .68, height, TILE * .68);
+  const bMesh    = m(bGeo, color);
+  bMesh.position.y = .13 + height / 2;
+  g.add(bMesh);
+
+  // techo más oscuro
+  const roof = m(G.roof, darken(color, .55)); roof.position.y = .13 + height + .05; g.add(roof);
+
+  // ventanas emissive (brillantes)
+  const floors = Math.floor(height / .75);
+  for (let fy = 0; fy < floors; fy++) {
+    const wy = .13 + .45 + fy * .72;
+    [-1, 1].forEach(s => {
+      // frente
+      const wf = em(G.window, 0xfff0a0, .95); wf.position.set(s * .22, wy, TILE * .34 + .01); g.add(wf);
+      // lateral
+      const ws = em(G.window, 0xfff0a0, .95); ws.position.set(TILE * .34 + .01, wy, s * .22); g.add(ws);
+    });
+  }
+  return g;
+}
+
+function darken(hex, f) {
+  const r = ((hex >> 16) & 0xff) * f | 0;
+  const g = ((hex >>  8) & 0xff) * f | 0;
+  const b = ( hex        & 0xff) * f | 0;
+  return (r << 16) | (g << 8) | b;
+}
+
+/** Tile de parque: césped verde + árboles + camino */
+function parkTile() {
+  const g = new THREE.Group();
+
+  // Suelo de césped
+  const grassGeo = new THREE.BoxGeometry(TILE * .99, .1, TILE * .99);
+  const grass = m(grassGeo, 0x2d9e4e); grass.position.y = .05; g.add(grass);
+
+  // Camino central (cruciforme)
+  const pathH = new THREE.BoxGeometry(TILE * .9, .01, .32);
+  const pathV = new THREE.BoxGeometry(.32, .01, TILE * .9);
+  const pathMat = new THREE.MeshLambertMaterial({ color: 0xc8b89a });
+  const ph = new THREE.Mesh(pathH, pathMat); ph.position.y = .115; g.add(ph);
+  const pv = new THREE.Mesh(pathV, pathMat); pv.position.y = .115; g.add(pv);
+
+  // Borde de césped más oscuro
+  const borderGeo = new THREE.BoxGeometry(TILE * .99, .04, TILE * .99);
+  const border = m(borderGeo, 0x1f6e35, { transparent: true, opacity: .55 });
+  border.position.y = .13; g.add(border);
+
+  // Función para crear un árbol en (tx, tz)
+  function addTree(tx, tz) {
+    const trunkGeo  = new THREE.CylinderGeometry(.055, .075, .38, 7);
+    const foliageG1 = new THREE.SphereGeometry(.32, 8, 7);
+    const foliageG2 = new THREE.SphereGeometry(.24, 8, 7);
+    const trunkMat  = new THREE.MeshLambertMaterial({ color: 0x6b3d1e });
+    const leafMat   = new THREE.MeshLambertMaterial({ color: 0x27ae60 });
+    const leafMat2  = new THREE.MeshLambertMaterial({ color: 0x2ecc71 });
+
+    const trunk  = new THREE.Mesh(trunkGeo,  trunkMat);  trunk.position.set(tx, .3,  tz);
+    const leaf1  = new THREE.Mesh(foliageG1, leafMat);   leaf1.position.set(tx, .72, tz);
+    const leaf2  = new THREE.Mesh(foliageG2, leafMat2);  leaf2.position.set(tx, .98, tz);
+    g.add(trunk); g.add(leaf1); g.add(leaf2);
+  }
+
+  // 3 árboles en esquinas del parque
+  addTree(-.55,  -.55);
+  addTree( .55,  -.55);
+  addTree(-.55,   .55);
+
+  // Pequeño banco (caja + patas)
+  const seatGeo = new THREE.BoxGeometry(.5, .06, .16);
+  const legGeo  = new THREE.BoxGeometry(.05, .18, .12);
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b5e3c });
+  const seat = new THREE.Mesh(seatGeo, woodMat); seat.position.set(.42, .3, .28); g.add(seat);
+  [-0.2, 0.2].forEach(lx => {
+    const leg = new THREE.Mesh(legGeo, woodMat); leg.position.set(.42 + lx, .21, .28); g.add(leg);
+  });
+
+  return g;
+}
+
+function carMesh(ox, oz, ci) {
+  const g   = new THREE.Group();
+  const col = CAR_PALETTE[ci % CAR_PALETTE.length];
+  const hl  = { color: 0xffeaa7, emissive: 0xffeaa7, emissiveIntensity: 1 };
+
+  const body = m(G.carBody, col);  body.position.y = .1; g.add(body);
+  const top  = m(G.carTop, darken(col, .75)); top.position.set(-.04, .245, 0); g.add(top);
+  [-1,1].forEach(s => {
+    const h = new THREE.Mesh(G.headlight, new THREE.MeshLambertMaterial(hl));
+    h.position.set(.29, .1, s * .11); g.add(h);
+  });
+  [[-0.19, -.12],[-.19, .12],[.19, -.12],[.19, .12]].forEach(([wx, wz]) => {
+    const w = m(G.wheel, 0x1a1d2e); w.rotation.z = Math.PI / 2; w.position.set(wx, .055, wz);
+    g.add(w);
+  });
+  g.position.set(ox, .055, oz);
+  return g;
+}
+
+function personMesh(ox, oz) {
+  const g = new THREE.Group();
+  
+  // Cuerpo y cabeza
+  const body = m(G.personBody, 0x4dabf7); body.position.y = .12; g.add(body);
+  const head = m(G.personHead, 0xffcba4); head.position.y = .33; g.add(head);
+  
+  // Flecha indicadora flotante (cono apuntando hacia abajo)
+  const arrow = em(G.startArrow, 0x74c0fc, .7);
+  arrow.scale.set(.45,.45,.45);
+  arrow.rotation.x = Math.PI; // Invertir para que apunte abajo
+  arrow.position.y = .75;      // Altura sobre la cabeza
+  g.add(arrow);
+
+  g.position.set(ox, 0, oz);
+  return g;
+}
+
+// Tile 0: solo calle
+function tile0() { return roadBase(); }
+
+// Tile 1: edificio (o parque si la posición está en PARK_POSITIONS)
+function tile1(row, col) {
+  return isPark(row, col) ? parkTile() : buildingTile(row, col);
+}
+
+// Tile 2: inicio carro
+function tile2() {
+  const g = roadBase();
+  g.add(carMesh(.1, 0, 1));
+  const arrow = em(G.startArrow, 0x69db7c, .9);
+  arrow.rotation.z = -Math.PI / 2;
+  arrow.position.set(-.55, .15, 0);
+  g.add(arrow);
+  return g;
+}
+
+// Tile 3: calle + 2 carros
+function tile3(row, col) {
+  const g = roadBase();
+  g.add(carMesh(-.3,  .28, (row + col) % 5));
+  g.add(carMesh( .28, -.28, (row + col + 2) % 5));
+  return g;
+}
+
+// Tile 4: calle + persona (la persona está en la acera, el carro puede pasar)
+function tile4() {
+  const g = roadBase();
+  // Franja de acera lateral para que la persona no esté en el asfalto
+  const sidewalkGeo = new THREE.BoxGeometry(.3, .12, TILE * .99);
+  const sw = m(sidewalkGeo, SIDEWALK_COLOR); sw.position.set(TILE * .34, .06, 0); g.add(sw);
+  // Persona de pie en la acera
+  g.add(personMesh(TILE * .35, 0));
+  return g;
+}
+
+// Tile 5: meta (bandera + aro luminoso)
+function tile5() {
+  const g = roadBase();
+  const mk = m(G.marker, 0xffffff, { transparent: true, opacity: .15 });
+  mk.rotation.x = -Math.PI / 2; mk.position.y = .11;
+  g.add(mk);
+  const ring = em(G.ring, 0xff6b6b, .8);
+  ring.rotation.x = Math.PI / 2; ring.position.y = .115;
+  g.add(ring);
+  const pole = m(G.pole, 0xadb5bd); pole.position.set(-.35, .55, -.35); g.add(pole);
+  const flag = em(G.flag, 0xff6b6b, .7); flag.position.set(-.15, .87, -.35); g.add(flag);
+  return g;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  ESCENA
+// ──────────────────────────────────────────────────────────────────────────────
+function buildCity(matrix) {
+  const container = document.getElementById('map-canvas');
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+
+  // ── Escena ──
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1d33);
+  // niebla muy suave, solo para profundidad
+  scene.fog = new THREE.Fog(0x1a1d33, 60, 130);
+
+  // ── Cámara ortográfica isométrica ──
+  const aspect = W / H;
+  const frust  = 28;
+  const camera = new THREE.OrthographicCamera(
+    -frust * aspect / 2,  frust * aspect / 2,
+     frust / 2,          -frust / 2,
+    .1, 600
+  );
+  const dist = 55;
+  camera.position.set(OFFSET + dist * .85, dist * .7, OFFSET + dist * .85);
+  camera.lookAt(OFFSET, 0, OFFSET);
+  camera.zoom = 1.1;
+  camera.updateProjectionMatrix();
+
+  // ── Renderer ──
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+
+  // ── Controles órbita ──
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(OFFSET, 0, OFFSET);
+  controls.enableDamping = true;
+  controls.dampingFactor = .07;
+  controls.minZoom = .4;
+  controls.maxZoom = 4;
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.update();
+
+  // botones externos
+  document.getElementById('btn-zoom-in').onclick  = () => { camera.zoom = Math.min(camera.zoom * 1.22, 4); camera.updateProjectionMatrix(); };
+  document.getElementById('btn-zoom-out').onclick = () => { camera.zoom = Math.max(camera.zoom / 1.22, .4); camera.updateProjectionMatrix(); };
+  document.getElementById('btn-reset-cam').onclick = () => {
+    camera.position.set(OFFSET + dist * .85, dist * .7, OFFSET + dist * .85);
+    camera.zoom = 1.1; camera.updateProjectionMatrix();
+    controls.target.set(OFFSET, 0, OFFSET); controls.update();
+  };
+
+  // ══ ILUMINACIÓN BRILLANTE ═══════════════════════════════════════════════════
+
+  // Luz ambiente fuerte: ilumina todo sin sombra
+  const ambLight = new THREE.AmbientLight(0xffffff, 1.4);
+  scene.add(ambLight);
+
+  // Sol principal (desde arriba-derecha): de día
+  const sun = new THREE.DirectionalLight(0xfff8e7, 2.0);
+  sun.position.set(25, 40, 20);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -25; sun.shadow.camera.right  =  25;
+  sun.shadow.camera.top  =  25; sun.shadow.camera.bottom = -25;
+  sun.shadow.camera.near = 1;   sun.shadow.camera.far    = 200;
+  sun.shadow.bias = -.0003;
+  scene.add(sun);
+
+  // Luz de relleno frontal (suave celeste)
+  const fill = new THREE.DirectionalLight(0xaad4ff, .8);
+  fill.position.set(-15, 15, 20); scene.add(fill);
+
+  // Luz de contorno (lateral opuesto)
+  const rim = new THREE.DirectionalLight(0xffd6a5, .5);
+  rim.position.set(20, 10, -25); scene.add(rim);
+
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Suelo ──
+  const gndMat = new THREE.MeshLambertMaterial({ color: GROUND_COLOR });
+  const gnd = new THREE.Mesh(G.ground, gndMat);
+  gnd.rotation.x = -Math.PI / 2;
+  gnd.position.set(OFFSET, -.08, OFFSET);
+  gnd.receiveShadow = true;
+  scene.add(gnd);
+
+  // Grid sutil
+  const gridMat1 = new THREE.LineBasicMaterial({ color: 0x252840 });
+  const grid = new THREE.GridHelper(GRID * TILE, GRID, 0x252840, 0x252840);
+  grid.position.set(OFFSET, -.05, OFFSET);
+  scene.add(grid);
+
+  // ── Construir tiles ──
+  const builders = [tile0, tile1, tile2, tile3, tile4, tile5];
+  for (let row = 0; row < GRID; row++) {
+    for (let col = 0; col < GRID; col++) {
+      const val  = matrix[row][col];
+      const x    = col * TILE + TILE / 2;
+      const z    = row * TILE + TILE / 2;
+
+      let tg;
+      if      (val === 1) tg = tile1(row, col);
+      else if (val === 3) tg = tile3(row, col);
+      else if (val === 4) tg = tile4();
+      else                tg = builders[val]?.() ?? tile0();
+
+      tg.position.set(x, 0, z);
+      tg.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      scene.add(tg);
+    }
+  }
+
+  // ── Recopilar materiales emissive (ventanas + meta) para actualizarlos con la hora ──
+  const winMats  = []; // ventanas de edificios (amarillo)
+  const goalMats = []; // aro + bandera de meta  (rojo)
+  scene.traverse(o => {
+    if (!o.isMesh || !o.material) return;
+    const hex = o.material.emissive?.getHex();
+    if (hex === 0xfff0a0) winMats.push(o.material);
+    if (hex === 0xff6b6b || hex === 0xffd43b) goalMats.push(o.material);
+  });
+
+  // ── Función de cambio de hora (aplica preset al vuelo) ──────────────────────
+  function applyTime(idx) {
+    const p = TIME_PRESETS[idx];
+    const bgHex  = isLightMode ? p.lightBg  : p.bg;
+    const fogHex = isLightMode ? p.lightFog : p.fogColor;
+    scene.background.setHex(bgHex);
+    if (scene.fog) scene.fog.color.setHex(fogHex);
+    ambLight.color.setHex(p.ambColor);  ambLight.intensity = p.ambInt;
+    sun.color.setHex(p.sunColor);       sun.intensity      = p.sunInt;
+    sun.position.set(...p.sunPos);
+    fill.color.setHex(p.filColor);      fill.intensity     = p.filInt;
+    rim.color.setHex(p.rimColor);       rim.intensity      = p.rimInt;
+    winMats.forEach(mat  => { mat.emissiveIntensity = p.winInt;        });
+    goalMats.forEach(mat => { mat.emissiveIntensity = Math.min(p.winInt + .2, 1.4); });
+    // Actualizar botón (SVG icono) y etiqueta corta
+    const btnIcon = document.getElementById('icon-time');
+    const lbl     = document.getElementById('time-label');
+    if (btnIcon && window._FA) {
+      const { SUN, MOON, SUNRISE, SUNSET } = window._FA;
+      const classPaths = [SUNRISE, SUN, SUNSET, MOON];
+      btnIcon.className = classPaths[idx];
+      // Actualizar data-state en el padre si hace falta
+      const btn = document.getElementById('btn-time');
+      if (btn) btn.dataset.state = idx;
+    }
+    if (lbl) lbl.textContent = p.shortLabel;
+  }
+
+  // Exponer globalmente para que app.js/HTML pueda llamarlo
+  window.nextTimeOfDay = () => {
+    currentTimeIdx = (currentTimeIdx + 1) % TIME_PRESETS.length;
+    applyTime(currentTimeIdx);
+  };
+
+  // ── Cambio de tema claro/oscuro ─────────────────────────────────────────
+  window.setMapTheme = (lightOn) => {
+    isLightMode = lightOn;
+    // Fondo y niebla
+    applyTime(currentTimeIdx);
+    // Suelo
+    gndMat.color.setHex(lightOn ? 0xd4d8ec : GROUND_COLOR);
+    // Grid
+    const gridColor = lightOn ? 0xb0b8d8 : 0x252840;
+    grid.material.forEach
+      ? grid.material.forEach(m => m.color?.setHex(gridColor))
+      : (grid.material.color?.setHex(gridColor));
+  };
+
+  // Aplicar estado inicial (día)
+  applyTime(currentTimeIdx);
+
+  // ── Resize handler ──
+  window.addEventListener('resize', () => {
+    const nW = container.clientWidth, nH = container.clientHeight, nA = nW / nH;
+    camera.left = -frust * nA / 2; camera.right = frust * nA / 2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(nW, nH);
+  });
+
+  // ── Animation loop ──
+  (function loop() {
+    requestAnimationFrame(loop);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+}
+
+// ── Arranque ──────────────────────────────────────────────────────────────────
+const DEFAULT_MATRIX = [
+  [4,1,1,1,1,1,1,1,1,1],
+  [0,1,1,0,0,0,3,0,0,0],
+  [2,1,1,0,1,0,1,0,1,0],
+  [0,0,0,0,3,0,0,0,3,0],
+  [0,1,1,0,1,1,1,1,1,0],
+  [0,0,0,0,1,1,0,0,0,5],
+  [4,1,1,1,1,1,0,1,1,1],
+  [0,1,0,0,0,1,0,0,0,1],
+  [0,1,0,1,0,1,1,1,0,1],
+  [0,0,0,1,0,0,0,0,0,1],
+];
+
+// Evento desde app.js con datos de Python
+window.addEventListener('ciudad-lista', e => buildCity(e.detail));
+
+// Fallback si Eel no responde en 3 s
+setTimeout(() => {
+  if (!document.getElementById('map-canvas').querySelector('canvas')) {
+    buildCity(DEFAULT_MATRIX);
+  }
+}, 3000);

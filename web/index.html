@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proyecto IA – Ciudad Isométrica</title>
+  <meta name="description" content="Mapa isométrico de ciudad con Three.js y Python Eel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons (iconos vectoriales) -->
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Canvas de Three.js ocupa toda la pantalla -->
+  <div id="map-canvas"></div>
+
+  <!-- ── Barra superior ── -->
+  <header class="top-bar">
+    <div class="top-bar__left">
+
+      <span class="logo-text">Ciudad <em>10×10</em></span>
+    </div>
+     <button id="btn-theme" class="btn-theme" title="Cambiar tema" onclick="toggleTheme()">
+        <i id="icon-theme" class="fa-solid fa-sun"></i>
+      </button>
+    <div class="top-bar__right">
+      <div class="status-badge"><span class="status-dot"></span> Conectado</div>
+      <!-- Botón tema: icono + tooltip -->
+    </div>
+  </header>
+
+  <!-- ── Leyenda flotante (derecha) ── -->
+  <div class="map-legend">
+    <p class="map-legend__title">Leyenda</p>
+    <div class="legend-item"><span class="legend-dot" style="background:#23263a;border:1px solid #555"></span> Calle</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#6c63ff"></span> Edificio / Parque</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#51cf66"></span> Inicio carro</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ffa94d"></span> Calle + carros</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#74c0fc"></span> Calle + persona</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b"></span> Meta</div>
+  </div>
+
+  <!-- ── Controles (IZQUIERDA, centrado vertical) ── -->
+  <div class="map-controls">
+
+    <!-- Hora del día -->
+    <div class="time-group">
+      <span class="time-label" id="time-label">Día</span>
+      <button class="map-btn map-btn--time" id="btn-time" data-state="1"
+              title="Cambiar hora del día" onclick="window.nextTimeOfDay?.()">
+        <i id="icon-time" class="fa-solid fa-sun"></i>
+      </button>
+    </div>
+
+    <div class="controls-sep"></div>
+
+    <!-- Zoom in -->
+    <button class="map-btn" id="btn-zoom-in" title="Acercar">
+      <i class="fa-solid fa-magnifying-glass-plus"></i>
+    </button>
+
+    <!-- Zoom out -->
+    <button class="map-btn" id="btn-zoom-out" title="Alejar">
+      <i class="fa-solid fa-magnifying-glass-minus"></i>
+    </button>
+
+    <!-- Reset cámara -->
+    <button class="map-btn" id="btn-reset-cam" title="Restablecer vista">
+      <i class="fa-solid fa-house"></i>
+    </button>
+
+  </div>
+
+  <!-- Hint -->
+  <div class="map-hint">
+    <i class="fa-solid fa-mouse-pointer"></i>
+    Arrastra · Scroll para zoom
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+  <script src="/eel.js"></script>
+  <script src="app.js"></script>
+  <script type="module" src="map.js"></script>
+</body>
+</html>
