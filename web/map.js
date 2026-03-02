@@ -340,13 +340,48 @@ function buildCity(matrix) {
   controls.maxPolarAngle = Math.PI / 2.1;
   controls.update();
 
+  // ── Cámara en primera persona (POV) ──
+  const povCamera = new THREE.PerspectiveCamera(70, W / H, 0.05, 100);
+  const povControls = new OrbitControls(povCamera, renderer.domElement);
+  // Restringir el OrbitControls de POV
+  povControls.enablePan = false;
+  povControls.enableZoom = false; // No alejarse del coche para no romper la ilusión
+  povControls.minPolarAngle = Math.PI * 0.35; 
+  povControls.maxPolarAngle = Math.PI * 0.55; // Mirar arriba/abajo moderadamente
+
+  let isPovMode = false;
+
   // botones externos
-  document.getElementById('btn-zoom-in').onclick  = () => { camera.zoom = Math.min(camera.zoom * 1.22, 4); camera.updateProjectionMatrix(); };
-  document.getElementById('btn-zoom-out').onclick = () => { camera.zoom = Math.max(camera.zoom / 1.22, .4); camera.updateProjectionMatrix(); };
+  document.getElementById('btn-zoom-in').onclick  = () => { if (!isPovMode) { camera.zoom = Math.min(camera.zoom * 1.22, 4); camera.updateProjectionMatrix(); } };
+  document.getElementById('btn-zoom-out').onclick = () => { if (!isPovMode) { camera.zoom = Math.max(camera.zoom / 1.22, .4); camera.updateProjectionMatrix(); } };
   document.getElementById('btn-reset-cam').onclick = () => {
+    isPovMode = false;
+    document.getElementById('btn-pov').style.color = '';
     camera.position.set(OFFSET + dist * .85, dist * .7, OFFSET + dist * .85);
     camera.zoom = 1.1; camera.updateProjectionMatrix();
-    controls.target.set(OFFSET, 0, OFFSET); controls.update();
+    controls.target.set(OFFSET, 0, OFFSET); 
+    controls.update();
+  };
+  
+  document.getElementById('btn-pov').onclick = () => {
+     isPovMode = !isPovMode;
+     const btnPov = document.getElementById('btn-pov');
+     if (isPovMode) {
+         btnPov.style.color = '#74c0fc'; // activo
+         // Configuración inicial de la cámara POV para mirar al frente del coche
+         const tAngle = playerCar.rotation.y;
+         const forwardX = Math.cos(tAngle);
+         const forwardZ = -Math.sin(tAngle);
+         povControls.target.set(
+             playerCar.position.x + forwardX * 5, 
+             playerCar.position.y + 0.3, 
+             playerCar.position.z + forwardZ * 5
+         );
+         povControls.update();
+     } else {
+         btnPov.style.color = ''; // volver al color original
+         controls.update(); // Restaurar main orbit
+     }
   };
 
   // ══ ILUMINACIÓN BRILLANTE ═══════════════════════════════════════════════════
@@ -551,6 +586,10 @@ function buildCity(matrix) {
     const nW = container.clientWidth, nH = container.clientHeight, nA = nW / nH;
     camera.left = -frust * nA / 2; camera.right = frust * nA / 2;
     camera.updateProjectionMatrix();
+    
+    povCamera.aspect = nA;
+    povCamera.updateProjectionMatrix();
+    
     renderer.setSize(nW, nH);
   });
 
@@ -712,8 +751,37 @@ function buildCity(matrix) {
       }
     }
 
-    controls.update();
-    renderer.render(scene, camera);
+    if (isPovMode) {
+        // Fijar la cámara en primera persona al auto
+        const angle = playerCar.rotation.y;
+        
+        // Colocar la cámara en el centro del carro un poco elevada
+        povCamera.position.set(
+            playerCar.position.x,
+            playerCar.position.y + 0.35, 
+            playerCar.position.z
+        );
+        
+        // Para que se pueda mirar con el mouse, el punto del OrbitControls avanza 
+        // junto con el vehiculo de manera constante.
+        const focusDist = 5;
+        // Obtenemos el vector de direccion desde la camara al objetivo actual del control
+        const dir = new THREE.Vector3();
+        povCamera.getWorldDirection(dir);
+        
+        // Empujamos el objetivo de los controles a esa distancia relativa
+        povControls.target.set(
+            playerCar.position.x + dir.x * focusDist,
+            playerCar.position.y + 0.35 + dir.y * focusDist,
+            playerCar.position.z + dir.z * focusDist
+        );
+
+        povControls.update();
+        renderer.render(scene, povCamera);
+    } else {
+        controls.update();
+        renderer.render(scene, camera);
+    }
   })();
 }
 
