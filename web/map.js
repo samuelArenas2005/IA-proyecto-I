@@ -225,6 +225,7 @@ function carMesh(ox, oz, ci) {
 
 function personMesh(ox, oz) {
   const g = new THREE.Group();
+  g.name = 'person';
   
   // Cuerpo y cabeza
   const body = m(G.personBody, 0x4dabf7); body.position.y = .12; g.add(body);
@@ -252,7 +253,6 @@ function tile1(row, col) {
 // Tile 2: inicio carro
 function tile2() {
   const g = roadBase();
-  g.add(carMesh(.1, 0, 1));
   const arrow = em(G.startArrow, 0x69db7c, .9);
   arrow.rotation.z = -Math.PI / 2;
   arrow.position.set(-.55, .15, 0);
@@ -392,6 +392,9 @@ function buildCity(matrix) {
 
   // ── Construir tiles ──
   const builders = [tile0, tile1, tile2, tile3, tile4, tile5];
+  let startX = 0, startZ = 0;
+  const tilesGrid = {};
+
   for (let row = 0; row < GRID; row++) {
     for (let col = 0; col < GRID; col++) {
       const val  = matrix[row][col];
@@ -407,8 +410,80 @@ function buildCity(matrix) {
       tg.position.set(x, 0, z);
       tg.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       scene.add(tg);
+      tilesGrid[`${row},${col}`] = tg;
+
+      // Guardar posición inicial del carro (celda 2)
+      if (val === 2) {
+        startX = x;
+        startZ = z;
+      }
     }
   }
+
+  // ── Carro Fijo del Jugador (Independiente) ──
+  const playerCar = carMesh(0, 0, 1);
+  playerCar.position.set(startX, 0, startZ);
+  playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(playerCar);
+
+  // Variables de movimiento fluido
+  let currentPath = [];
+  let pathIndex = 0;
+  let moveProgress = 0;
+  let isMoving = false;
+  let isPaused = false;
+
+  function checkAndAnimatePerson(row, col) {
+      if (matrix[row] && matrix[row][col] === 4) {
+          const cellTg = tilesGrid[`${row},${col}`];
+          if (cellTg) {
+              const person = cellTg.getObjectByName('person');
+              if (person && !person.userData.picked) {
+                  person.userData.picked = true;
+                  isPaused = true; // Acaba de encontrar una persona, pausamos
+                  let frame = 0;
+                  function jumpAnim() {
+                     frame++;
+                     person.position.y += 0.04;
+                     person.rotation.y += 0.2;
+                     person.scale.setScalar(1 - frame/25);
+                     if (frame < 25) {
+                         requestAnimationFrame(jumpAnim);
+                     } else {
+                         person.visible = false;
+                         // Esperar 1 segundo antes de reanudar el movimiento
+                         setTimeout(() => {
+                             isPaused = false;
+                         }, 1000);
+                     }
+                  }
+                  jumpAnim();
+              }
+          }
+      }
+  }
+
+  window.startCarMovement = (path) => {
+    if (path && path.error) {
+      console.error(path.error);
+      if (window.mostrar_notificacion) window.mostrar_notificacion("Error ruta: " + path.error);
+      return;
+    }
+    if (!playerCar || !path || path.length < 2) return;
+    
+    currentPath = path;
+    pathIndex = 0;
+    moveProgress = 0;
+    isMoving = true;
+    isPaused = false;
+    
+    // Snap rápido a posición de inicio
+    let r0 = path[0][0], c0 = path[0][1];
+    playerCar.position.set(c0 * TILE + TILE / 2, 0, r0 * TILE + TILE / 2);
+    
+    checkAndAnimatePerson(r0, c0);
+  };
+
 
   // ── Recopilar materiales emissive (ventanas + meta) para actualizarlos con la hora ──
   const winMats  = []; // ventanas de edificios (amarillo)
@@ -482,6 +557,161 @@ function buildCity(matrix) {
   // ── Animation loop ──
   (function loop() {
     requestAnimationFrame(loop);
+
+    // Sistema de movimiento a pasos pequeños, de mitad en mitad
+    if (isMoving && !isPaused && currentPath && pathIndex < currentPath.length - 1) {
+      // Avanzar de manera fluida (velocidad por frame)
+      moveProgress += 0.02; 
+      
+      if (moveProgress >= 1) {
+        moveProgress = 0;
+        pathIndex++;
+        
+        if (pathIndex < currentPath.length) {
+            checkAndAnimatePerson(currentPath[pathIndex][0], currentPath[pathIndex][1]);
+        }
+      }
+      
+      if (pathIndex < currentPath.length - 1) {
+        const p1 = currentPath[pathIndex];
+        const p2 = currentPath[pathIndex + 1];
+        
+        // Coalescer a formato coord de pantalla (centro celda)
+        const x1 = p1[1] * TILE + TILE / 2;
+        const z1 = p1[0] * TILE + TILE / 2;
+        const x2 = p2[1] * TILE + TILE / 2;
+        const z2 = p2[0] * TILE + TILE / 2;
+        
+        // Interpolación lineal posición
+        playerCar.position.x = x1 + (x2 - x1) * moveProgress;
+        playerCar.position.z = z1 + (z2 - z1) * moveProgress;
+        
+        // Rotación suave 
+        const dx = x2 - x1;
+        const dz = z2 - z1;
+        if (dx !== 0 || dz !== 0) {
+           const targetAngle = Math.atan2(-dz, dx);
+           let diff = targetAngle - playerCar.rotation.y;
+           
+           // Normalizar para que la rotacion tome camino corto en dar la vuelta
+           while (diff < -Math.PI) diff += Math.PI * 2;
+           while (diff >  Math.PI) diff -= Math.PI * 2;
+           
+           playerCar.rotation.y += diff * 0.15; 
+        }
+      } else {
+        if (isMoving) {
+          isMoving = false;
+          
+          // Confeti si la meta es 5
+          const endP = currentPath[currentPath.length - 1];
+          if (matrix[endP[0]] && matrix[endP[0]][endP[1]] === 5) {
+             const cx = playerCar.position.x;
+             const cz = playerCar.position.z;
+             
+             const particleCount = 100;
+             const geo = new THREE.BufferGeometry();
+             const pos = new Float32Array(particleCount * 3);
+             const colors = new Float32Array(particleCount * 3);
+             const vels = [];
+             const pal = [0xff6b6b, 0xffa94d, 0x69db7c, 0x74c0fc, 0xf783ac];
+             for(let i=0; i<particleCount; i++){
+                 pos[i*3] = cx + (Math.random()-0.5)*1.5;
+                 pos[i*3+1] = 1.6; // height
+                 pos[i*3+2] = cz + (Math.random()-0.5)*1.5;
+                 vels.push({
+                     x: (Math.random()-0.5)*0.1,
+                     y: Math.random()*0.15 + 0.1,
+                     z: (Math.random()-0.5)*0.1
+                 });
+                 const c = new THREE.Color(pal[Math.floor(Math.random()*pal.length)]);
+                 colors[i*3] = c.r;
+                 colors[i*3+1] = c.g;
+                 colors[i*3+2] = c.b;
+             }
+             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+             geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+             const mat = new THREE.PointsMaterial({ size: 0.15, vertexColors: true, transparent: true });
+             const confetti = new THREE.Points(geo, mat);
+             scene.add(confetti);
+             
+             let cFrame = 0;
+             function cAnim(){
+                 cFrame++;
+                 const pAttr = geo.getAttribute('position');
+                 for(let i=0; i<particleCount; i++){
+                     let px = pAttr.getX(i), py = pAttr.getY(i), pz = pAttr.getZ(i);
+                     vels[i].y -= 0.006; // gravity
+                     px += vels[i].x; py += vels[i].y; pz += vels[i].z;
+                     pAttr.setXYZ(i, px, py, pz);
+                 }
+                 pAttr.needsUpdate = true;
+                 if(cFrame < 150) requestAnimationFrame(cAnim);
+                 else {
+                     scene.remove(confetti);
+                     geo.dispose(); mat.dispose();
+                 }
+             }
+             cAnim();
+          } else {
+             // Si el camino termina en otro lugar que no es 5 (error / enojo)
+             const cx = playerCar.position.x;
+             const cz = playerCar.position.z;
+             
+             const particleCount = 20;
+             const geo = new THREE.BufferGeometry();
+             const pos = new Float32Array(particleCount * 3);
+             const colors = new Float32Array(particleCount * 3);
+             const vels = [];
+             for(let i=0; i<particleCount; i++){
+                 pos[i*3] = cx + (Math.random()-0.5)*0.8;
+                 pos[i*3+1] = 0.8; // Salen de más abajo, sobre el auto
+                 pos[i*3+2] = cz + (Math.random()-0.5)*0.8;
+                 vels.push({
+                     x: (Math.random()-0.5)*0.02,
+                     y: Math.random()*0.04 + 0.02, 
+                     z: (Math.random()-0.5)*0.02
+                 });
+                 // Color enfadado (rojos oscuros y algo naranjas)
+                 const val = Math.random();
+                 colors[i*3] = 0.8 + (Math.random() * 0.2); // R fuerte
+                 colors[i*3+1] = val * 0.3; // poco G
+                 colors[i*3+2] = val * 0.2; // poco B
+             }
+             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+             geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+             const mat = new THREE.PointsMaterial({ size: 0.25, vertexColors: true, transparent: true, opacity: 0.9 });
+             const angerParticles = new THREE.Points(geo, mat);
+             scene.add(angerParticles);
+             
+             let aFrame = 0;
+             function aAnim(){
+                 aFrame++;
+                 const pAttr = geo.getAttribute('position');
+                 for(let i=0; i<particleCount; i++){
+                     let px = pAttr.getX(i), py = pAttr.getY(i), pz = pAttr.getZ(i);
+                     // suben como humo enojado y tiemblan
+                     px += vels[i].x + (Math.random() - 0.5) * 0.05;
+                     py += vels[i].y; 
+                     pz += vels[i].z + (Math.random() - 0.5) * 0.05;
+                     pAttr.setXYZ(i, px, py, pz);
+                 }
+                 pAttr.needsUpdate = true;
+                 mat.opacity = 0.9 * (1 - aFrame/60); // se esfuman rápido
+                 
+                 if(aFrame < 60) {
+                     requestAnimationFrame(aAnim);
+                 } else {
+                     scene.remove(angerParticles);
+                     geo.dispose(); mat.dispose();
+                 }
+             }
+             aAnim();
+          }
+        }
+      }
+    }
+
     controls.update();
     renderer.render(scene, camera);
   })();
@@ -502,7 +732,31 @@ const DEFAULT_MATRIX = [
 ];
 
 // Evento desde app.js con datos de Python
-window.addEventListener('ciudad-lista', e => buildCity(e.detail));
+window.addEventListener('ciudad-lista', async e => {
+  buildCity(e.detail);
+});
+
+// Listener para el botón de play
+setTimeout(() => {
+  const btnPlay = document.getElementById('btn-play-route');
+  if (btnPlay) {
+    btnPlay.addEventListener('click', async () => {
+      try {
+        if (window.eel && window.eel.obtener_ruta) {
+          const ruta = await window.eel.obtener_ruta()();
+          if (window.startCarMovement) {
+            window.startCarMovement(ruta);
+          }
+        } else {
+          console.warn("Eel no está listo o no tiene la función obtener_ruta.");
+        }
+      } catch (err) {
+        console.warn('Error al iniciar movimiento automático', err);
+      }
+    });
+  }
+}, 500); // 500ms delay to ensure the DOM and script are loaded
+
 
 // Fallback si Eel no responde en 3 s
 setTimeout(() => {
