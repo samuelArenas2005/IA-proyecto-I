@@ -313,3 +313,42 @@ body.light .btn-theme {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ── Botón volver al menú ────────────────────── */
+.btn-back {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, box-shadow .2s, transform .15s, background .2s;
+  flex-shrink: 0;
+}
+.btn-back:hover {
+  border-color: var(--accent);
+  box-shadow: var(--glow);
+  background: rgba(108,99,255,.18);
+}
+.btn-back:active { transform: scale(.88); }
+
+body.light .btn-back {
+  background: rgba(255,255,255,.9);
+  border-color: rgba(100,90,220,.3);
+  color: #1a1d40;
+}
+
+/* Fade-out de toda la página para transición al menú */
+body.fade-out {
+  animation: pageFadeOut 0.45s ease forwards;
+}
+@keyframes pageFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Mapa – Ciudad 10×10</title>
+  <meta name="description" content="Editor de mapa isométrico tipo SimCity para el simulador de ciudad con IA." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Canvas Three.js -->
+  <div id="map-canvas"></div>
+
+  <!-- ── Barra superior ── -->
+  <header class="top-bar">
+    <div class="top-bar__left">
+      <button id="btn-back" class="btn-icon" title="Volver al menú" onclick="irAlMenu()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="brand">
+        <span class="brand-tag">Editor</span>
+        <span class="brand-title">Crear Mapa <em>10×10</em></span>
+      </div>
+    </div>
+    <div class="top-bar__center">
+      <!-- Indicador de modo activo -->
+      <div id="cam-mode-indicator" class="cam-mode-indicator">
+        <i class="fa-solid fa-paintbrush"></i>
+        Modo Pincel &nbsp;<kbd>Espacio</kbd> para mover cámara
+      </div>
+    </div>
+    <div class="top-bar__right">
+      <button class="btn-icon" title="Deshacer (Ctrl+Z)" onclick="undoLastAction()" id="btn-undo">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+      <button class="btn-icon" title="Restablecer cámara" onclick="resetCamera()">
+        <i class="fa-solid fa-camera-rotate"></i>
+      </button>
+      <button id="btn-reset" class="btn-action btn-action--warn" title="Limpiar mapa" onclick="resetMap()">
+        <i class="fa-solid fa-trash"></i> Limpiar
+      </button>
+      <button id="btn-save" class="btn-action btn-action--primary" title="Guardar mapa" onclick="guardarMapa()">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Panel de herramientas (izquierda) ── -->
+  <aside class="tools-panel" id="tools-panel">
+
+    <p class="tools-section-title"><i class="fa-solid fa-paintbrush"></i> Pinceles</p>
+
+    <!-- CALLE (0) -->
+    <button class="tool-btn active" id="tool-0" data-tile="0" onclick="selectTool(0)">
+      <span class="tool-icon-wrap road-bg">
+        <i class="fa-solid fa-road"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Calle</span>
+        <span class="tool-desc">Superficie transitable</span>
+      </span>
+    </button>
+
+    <!-- EDIFICIO / PARQUE (1) -->
+    <button class="tool-btn" id="tool-1" data-tile="1" onclick="selectTool(1)">
+      <span class="tool-icon-wrap building-bg">
+        <i class="fa-solid fa-building"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Edificio / Zona</span>
+        <span class="tool-desc">Subtipo en panel</span>
+      </span>
+      <span class="tool-badge">▼</span>
+    </button>
+
+    <!-- Sub-selector edificio/parque/casa -->
+    <div class="subtool-panel" id="subtool-panel">
+      <p class="tools-section-title"><i class="fa-solid fa-layer-group"></i> Subtipo</p>
+      <button class="subtool-btn active" id="sub-building" onclick="selectSubtype('building')">
+        <i class="fa-solid fa-building"></i> Edificio
+      </button>
+      <button class="subtool-btn" id="sub-park" onclick="selectSubtype('park')">
+        <i class="fa-solid fa-tree"></i> Parque
+      </button>
+      <button class="subtool-btn" id="sub-house" onclick="selectSubtype('house')">
+        <i class="fa-solid fa-house"></i> Casa
+      </button>
+    </div>
+
+    <div class="tools-sep"></div>
+
+    <!-- INICIO CARRO (2) -->
+    <button class="tool-btn" id="tool-2" data-tile="2" onclick="selectTool(2)">
+      <span class="tool-icon-wrap start-bg">
+        <i class="fa-solid fa-car"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Inicio carro</span>
+        <span class="tool-desc">Solo 1 por mapa</span>
+      </span>
+      <span class="tool-badge unique" id="badge-2">1×</span>
+    </button>
+
+    <!-- CALLE + PERSONA (4) -->
+    <button class="tool-btn" id="tool-4" data-tile="4" onclick="selectTool(4)">
+      <span class="tool-icon-wrap person-bg">
+        <i class="fa-solid fa-person-walking"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Calle + Persona</span>
+        <span class="tool-desc">Obstáculo peatón</span>
+      </span>
+    </button>
+
+    <!-- META (5) -->
+    <button class="tool-btn" id="tool-5" data-tile="5" onclick="selectTool(5)">
+      <span class="tool-icon-wrap goal-bg">
+        <i class="fa-solid fa-flag-checkered"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Meta</span>
+        <span class="tool-desc">Solo 1 por mapa</span>
+      </span>
+      <span class="tool-badge unique" id="badge-5">1×</span>
+    </button>
+
+    <div class="tools-sep"></div>
+
+    <!-- PINCEL RUTA -->
+    <button class="tool-btn" id="tool-path" onclick="selectToolPath()">
+      <span class="tool-icon-wrap path-bg">
+        <i class="fa-solid fa-route"></i>
+      </span>
+      <span class="tool-info">
+        <span class="tool-name">Pincel Ruta</span>
+        <span class="tool-desc">Define el recorrido</span>
+      </span>
+    </button>
+
+    <!-- Panel de control de ruta (visible solo con pincel ruta activo) -->
+    <div class="subtool-panel" id="path-panel">
+      <p class="tools-section-title"><i class="fa-solid fa-route"></i> Ruta activa</p>
+      <div id="path-step-count" class="path-count">0 pasos — ruta vacía</div>
+      <button class="subtool-btn" onclick="undoPathStep()">
+        <i class="fa-solid fa-rotate-left"></i> Deshacer último
+      </button>
+      <button class="subtool-btn" onclick="clearPath()">
+        <i class="fa-solid fa-trash"></i> Borrar ruta
+      </button>
+      <button class="subtool-btn subtool-btn--save" onclick="guardarRuta()">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar ruta
+      </button>
+    </div>
+
+    <div class="tools-sep"></div>
+
+    <!-- Validación -->
+    <div class="validation-panel" id="validation-panel">
+      <p class="tools-section-title"><i class="fa-solid fa-circle-check"></i> Validación</p>
+      <div class="val-item" id="val-start">
+        <i class="fa-solid fa-circle-xmark val-icon invalid"></i> Inicio carro
+      </div>
+      <div class="val-item" id="val-goal">
+        <i class="fa-solid fa-circle-xmark val-icon invalid"></i> Meta
+      </div>
+    </div>
+
+    <div class="tools-sep"></div>
+
+    <!-- Controles de cámara rápidos -->
+    <p class="tools-section-title"><i class="fa-solid fa-video"></i> Cámara</p>
+    <div class="cam-shortcuts">
+      <div class="shortcut-item"><kbd>Ctrl+Z</kbd>    <span>Deshacer</span></div>
+      <div class="shortcut-item"><kbd>Espacio</kbd>   <span>Cámara libre</span></div>
+      <div class="shortcut-item"><kbd>WASD / ↑↓←→</kbd> <span>Mover vista</span></div>
+      <div class="shortcut-item"><kbd>Rueda</kbd>     <span>Zoom</span></div>
+      <div class="shortcut-item"><kbd>Med-click</kbd> <span>Pan libre</span></div>
+      <div class="shortcut-item"><kbd>Clic der</kbd>  <span>Borrar / Deshacer</span></div>
+    </div>
+
+  </aside>
+
+  <!-- ── Panel Matriz (derecha) ── -->
+  <div class="matrix-panel" id="matrix-panel">
+    <p class="tools-section-title"><i class="fa-solid fa-table-cells"></i> Matriz</p>
+    <div class="matrix-grid" id="matrix-grid"></div>
+    <div class="matrix-legend">
+      <div class="ml-item"><span class="ml-dot" style="background:#343a50"></span>Calle</div>
+      <div class="ml-item"><span class="ml-dot" style="background:#7c6fff"></span>Edificio</div>
+      <div class="ml-item"><span class="ml-dot" style="background:#51cf66"></span>Inicio</div>
+      <div class="ml-item"><span class="ml-dot" style="background:#74c0fc"></span>Persona</div>
+      <div class="ml-item"><span class="ml-dot" style="background:#ff6b6b"></span>Meta</div>
+    </div>
+    <button class="btn-copy" onclick="copiarMatriz()">
+      <i class="fa-solid fa-copy"></i> Copiar Python
+    </button>
+  </div>
+
+  <!-- ── Tooltip ── -->
+  <div class="tile-tooltip" id="tile-tooltip"></div>
+
+  <!-- ── Modal subtipo ── -->
+  <div class="modal-overlay" id="modal-overlay" onclick="cerrarModal()"></div>
+  <div class="modal-box" id="modal-box">
+    <p class="modal-title"><i class="fa-solid fa-cubes"></i> ¿Qué colocar aquí?</p>
+    <button class="modal-btn" onclick="placeTileModal('building')">
+      <i class="fa-solid fa-building"></i> Edificio
+    </button>
+    <button class="modal-btn" onclick="placeTileModal('park')">
+      <i class="fa-solid fa-tree"></i> Parque
+    </button>
+    <button class="modal-btn" onclick="placeTileModal('house')">
+      <i class="fa-solid fa-house"></i> Casa
+    </button>
+    <button class="modal-btn modal-btn--cancel" onclick="cerrarModal()">
+      <i class="fa-solid fa-xmark"></i> Cancelar
+    </button>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+  <!-- ── Hint inferior ── -->
+  <div class="map-hint" id="map-hint">
+    <i class="fa-solid fa-paintbrush"></i> Click/arrastra pinta &nbsp;·&nbsp;
+    <kbd>WASD</kbd> mueve vista &nbsp;·&nbsp;
+    <kbd>Espacio</kbd> cámara libre &nbsp;·&nbsp;
+    Clic der borra
+  </div>
+
+  <script src="/eel.js" onerror="console.warn('eel.js no disponible')"></script>
+  <script type="module" src="editor.js"></script>
+</body>
+</html>

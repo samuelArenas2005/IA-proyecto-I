@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ciudad 10×10 – Menú Principal</title>
+  <meta name="description" content="Pantalla de inicio del simulador de ciudad isométrica con IA." />
+
+  <!-- Fuente -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Estilos del menú -->
+  <link rel="stylesheet" href="menu.css" />
+
+  <!-- Import map para Three.js (ES module) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Fondo animado Three.js (blur CSS) -->
+  <div id="bg-canvas"></div>
+  <div id="overlay"></div>
+
+  <!-- Layout principal -->
+  <main id="menu-root">
+
+    <!-- Panel de botones -->
+    <div class="menu-panel">
+      <div class="brand-tag">Simulador IA</div>
+      <h1 class="brand-title">Ciudad<br>10 × 10</h1>
+      <p class="brand-sub">Motor de rutas con inteligencia artificial</p>
+
+      <div class="menu-sep"></div>
+
+      <nav class="menu-buttons" aria-label="Menú principal">
+
+        <!-- INICIO – habilitado -->
+        <button id="btn-inicio" class="menu-btn menu-btn--active"
+                onclick="irAlJuego()" title="Iniciar simulación">
+          <span class="menu-btn__icon"><i class="fa-solid fa-play"></i></span>
+          <span class="menu-btn__label">Inicio</span>
+          <span class="menu-btn__badge">Disponible</span>
+        </button>
+
+        <!-- PLAYER VS CPU -->
+        <button id="btn-pvc" class="menu-btn menu-btn--disabled"
+                disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-user-vs"></i></span>
+          <span class="menu-btn__label">Player vs CPU</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+
+        <!-- CPU VS CPU -->
+        <button id="btn-cvc" class="menu-btn menu-btn--disabled"
+                disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-robot"></i></span>
+          <span class="menu-btn__label">CPU vs CPU</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+
+        <!-- CREAR MAPA -->
+        <button id="btn-crear" class="menu-btn menu-btn--active"
+                onclick="irAlCrearMapa()" title="Abrir editor de mapa">
+          <span class="menu-btn__icon"><i class="fa-solid fa-pen-ruler"></i></span>
+          <span class="menu-btn__label">Crear mapa</span>
+          <span class="menu-btn__badge">Disponible</span>
+        </button>
+
+      </nav>
+    </div>
+
+  </main>
+
+  <div class="version-tag">v0.1.0-alpha</div>
+
+  <!-- Eel (Python bridge) -->
+  <script src="/eel.js" onerror="console.warn('eel.js no disponible')"></script>
+
+  <!-- Lógica Three.js del menú -->
+  <script type="module" src="menu.js"></script>
+
+</body>
+</html>
