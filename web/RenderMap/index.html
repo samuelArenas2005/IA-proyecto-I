@@ -50,7 +50,7 @@
     <div class="legend-item"><span class="legend-dot" style="background:#23263a;border:1px solid #555"></span> Calle</div>
     <div class="legend-item"><span class="legend-dot" style="background:#6c63ff"></span> Edificio / Parque</div>
     <div class="legend-item"><span class="legend-dot" style="background:#51cf66"></span> Inicio carro</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#ffa94d"></span> Calle + carros</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#00ff00; box-shadow: 0 0 6px #00ff00;"></span> Semáforo</div>
     <div class="legend-item"><span class="legend-dot" style="background:#74c0fc"></span> Calle + persona</div>
     <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b"></span> Meta</div>
   </div>
@@ -72,6 +72,11 @@
     <!-- Play ruta -->
     <button class="map-btn map-btn--play" id="btn-play-route" title="Iniciar Ruta" style="color: #69db7c;">
       <i class="fa-solid fa-play"></i>
+    </button>
+
+    <!-- Velocidad -->
+    <button class="map-btn map-btn--speed" id="btn-speed" data-speed="1.0" title="Velocidad (x0.5 x1.0 x1.5 x2.0 x2.5 x3.0)" onclick="window.cycleSpeed?.()">
+      <span class="speed-label">x1.0</span>
     </button>
 
     <!-- POV (Point of View) del carro -->

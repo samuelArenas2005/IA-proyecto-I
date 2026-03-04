@@ -260,11 +260,36 @@ function tile2() {
   return g;
 }
 
-// Tile 3: calle + 2 carros
+// Tile 3: semáforo (verde por defecto)
 function tile3(row, col) {
   const g = roadBase();
-  g.add(carMesh(-.3,  .28, (row + col) % 5));
-  g.add(carMesh( .28, -.28, (row + col + 2) % 5));
+  
+  // Poste del semáforo
+  const pole = m(G.pole, 0xadb5bd);
+  pole.position.set(-.35, .55, -.35);
+  g.add(pole);
+  
+  // Caja del semáforo
+  const boxGeo = new THREE.BoxGeometry(.2, .4, .1);
+  const boxBody = m(boxGeo, 0x2a2a2a);
+  boxBody.position.set(-.35, .85, -.35);
+  g.add(boxBody);
+  
+  // Luz emissive (circular, y por defecto verde)
+  const lightGeo = new THREE.CylinderGeometry(.08, .08, .02, 16);
+  const lightMat = new THREE.MeshLambertMaterial({ 
+    color: 0x00ff00,
+    emissive: 0x00ff00, 
+    emissiveIntensity: 1.2 
+  });
+  const light = new THREE.Mesh(lightGeo, lightMat);
+  light.position.set(-.35, .85, -.27);
+  light.rotation.z = Math.PI / 2;
+  g.add(light);
+  
+  // Guardar referencia a la luz para cambiar color luego
+  g.userData.trafficLight = { light, lightMat, isRed: false };
+  
   return g;
 }
 
@@ -467,6 +492,7 @@ function buildCity(matrix) {
   let moveProgress = 0;
   let isMoving = false;
   let isPaused = false;
+  let speedMultiplier = 1.0; // Por defecto x1
 
   function checkAndAnimatePerson(row, col) {
       if (matrix[row] && matrix[row][col] === 4) {
@@ -486,13 +512,41 @@ function buildCity(matrix) {
                          requestAnimationFrame(jumpAnim);
                      } else {
                          person.visible = false;
-                         // Esperar 1 segundo antes de reanudar el movimiento
+                         // Esperar según factor de velocidad
+                         const waitTime = 1000 / speedMultiplier;
                          setTimeout(() => {
                              isPaused = false;
-                         }, 1000);
+                         }, waitTime);
                      }
                   }
                   jumpAnim();
+              }
+          }
+      }
+  }
+
+  function checkAndAnimateTraffic(row, col) {
+      if (matrix[row] && matrix[row][col] === 3) {
+          const cellTg = tilesGrid[`${row},${col}`];
+          if (cellTg && cellTg.userData.trafficLight) {
+              const tl = cellTg.userData.trafficLight;
+              if (!tl.isRed) {
+                  tl.isRed = true;
+                  isPaused = true;
+                  
+                  // Cambiar a rojo
+                  tl.lightMat.color.setHex(0xff0000);
+                  tl.lightMat.emissive.setHex(0xff0000);
+                  
+                  // Esperar 2 segundos según factor de velocidad
+                  const waitTime = 2000 / speedMultiplier;
+                  setTimeout(() => {
+                      // Volver a verde
+                      tl.lightMat.color.setHex(0x00ff00);
+                      tl.lightMat.emissive.setHex(0x00ff00);
+                      tl.isRed = false;
+                      isPaused = false;
+                  }, waitTime);
               }
           }
       }
@@ -506,6 +560,23 @@ function buildCity(matrix) {
     }
     if (!playerCar || !path || path.length < 2) return;
     
+    // Resetear todos los semáforos a verde y personas antes de iniciar
+    scene.traverse(o => {
+      if (o.userData.trafficLight) {
+        const tl = o.userData.trafficLight;
+        tl.isRed = false;
+        tl.lightMat.color.setHex(0x00ff00);
+        tl.lightMat.emissive.setHex(0x00ff00);
+      }
+      if (o.name === 'person') {
+        o.userData.picked = false;
+        o.visible = true;
+        o.position.y = 0;
+        o.rotation.y = 0;
+        o.scale.set(1, 1, 1);
+      }
+    });
+    
     currentPath = path;
     pathIndex = 0;
     moveProgress = 0;
@@ -517,6 +588,7 @@ function buildCity(matrix) {
     playerCar.position.set(c0 * TILE + TILE / 2, 0, r0 * TILE + TILE / 2);
     
     checkAndAnimatePerson(r0, c0);
+    checkAndAnimateTraffic(r0, c0);
   };
 
 
@@ -564,6 +636,21 @@ function buildCity(matrix) {
     applyTime(currentTimeIdx);
   };
 
+  // Cambiar velocidad del vehículo
+  window.cycleSpeed = () => {
+    const speeds = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+    const currentIdx = speeds.indexOf(speedMultiplier);
+    const nextIdx = (currentIdx + 1) % speeds.length;
+    speedMultiplier = speeds[nextIdx];
+    
+    // Actualizar botón con el nuevo valor
+    const btnSpeed = document.getElementById('btn-speed');
+    if (btnSpeed) {
+      btnSpeed.dataset.speed = speedMultiplier.toFixed(1);
+      btnSpeed.textContent = 'x' + speedMultiplier.toFixed(1);
+    }
+  };
+
   // ── Cambio de tema claro/oscuro ─────────────────────────────────────────
   window.setMapTheme = (lightOn) => {
     isLightMode = lightOn;
@@ -599,8 +686,8 @@ function buildCity(matrix) {
 
     // Sistema de movimiento a pasos pequeños, de mitad en mitad
     if (isMoving && !isPaused && currentPath && pathIndex < currentPath.length - 1) {
-      // Avanzar de manera fluida (velocidad por frame)
-      moveProgress += 0.02; 
+      // Avanzar de manera fluida (velocidad por frame, multiplicada por speedMultiplier)
+      moveProgress += 0.02 * speedMultiplier; 
       
       if (moveProgress >= 1) {
         moveProgress = 0;
@@ -608,6 +695,7 @@ function buildCity(matrix) {
         
         if (pathIndex < currentPath.length) {
             checkAndAnimatePerson(currentPath[pathIndex][0], currentPath[pathIndex][1]);
+            checkAndAnimateTraffic(currentPath[pathIndex][0], currentPath[pathIndex][1]);
         }
       }
       

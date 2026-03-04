@@ -271,6 +271,25 @@ body.light .btn-theme {
   font-size: 1.1rem;
 }
 
+/* ── Botón de velocidad ───────────────────────── */
+.map-btn--speed {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  min-width: 50px;
+  transition: all .3s;
+}
+
+.map-btn--speed:hover {
+  border-color: #4c7cfa;
+  box-shadow: 0 0 10px rgba(76, 124, 250, .35);
+}
+
+.speed-label {
+  display: block;
+  line-height: 1.4;
+}
+
 /* ── Hint ──────────────────────────────────── */
 .map-hint {
   position: fixed;

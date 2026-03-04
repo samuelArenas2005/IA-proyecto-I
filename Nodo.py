@@ -8,11 +8,8 @@ class Nodo:
         self.Status = Status
         self.Route = Route
         self.People = people
-    
-    def add_element_route(self,Status):
-        self.Route.append(Status.get_values())
 
-    def expandir(self,map,nodoPadre):
+    def expandir_amplitud(self,map,nodoPadre):
         
         def create_children(statusChildren,nodosHijos,posX,posY,people):
             newNPerson = statusChildren.nPeoples + add_person(map,posX,posY,people)

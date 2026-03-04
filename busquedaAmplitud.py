@@ -40,7 +40,7 @@ def busqueda_amplitud(map):
         if is_goal(map,n.Status,nPeople):
             return n
         
-        hijos = n.expandir(map,n)
+        hijos = n.expandir_amplitud(map,n)
         cola.extend(hijos)
     
     
