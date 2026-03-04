@@ -1,4 +1,5 @@
 import eel
+from busquedaAmplitud import limpiar_route
 
 # ─── Configuración de Eel ──────────────────────────────────────────────────────
 eel.init('web')  # Carpeta donde está el frontend
@@ -7,13 +8,13 @@ eel.init('web')  # Carpeta donde está el frontend
 # 0=calle  1=edificio/parque  2=inicio carro  3=calle+carros  4=calle+persona  5=calle+meta
 CITY_MATRIX = [
     [4, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 1, 0, 0, 0, 3, 0, 0, 0],
+    [0, 1, 1, 0, 4, 0, 3, 0, 0, 0],
     [2, 1, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 3, 0, 0, 0, 3, 0],
+    [0, 0, 0, 0, 3, 0, 0, 0, 3, 4],
     [0, 1, 1, 0, 1, 1, 1, 1, 1, 0],
     [0, 0, 0, 0, 1, 1, 0, 0, 0, 5],
     [4, 1, 1, 1, 1, 1, 0, 1, 1, 1],
-    [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+    [0, 1, 0, 4, 0, 1, 0, 0, 0, 1],
     [0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
 ]
@@ -24,11 +25,13 @@ def obtener_matriz_ciudad():
     return CITY_MATRIX
 
 # ─── Ruta de ejemplo para el vehículo ─────────────────────────────────────────
-PATH_EXAMPLE = [
+""" PATH_EXAMPLE = [
     (2,0),(1,0),(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(9,1),(9,2),(8,2),
     (7,2),(7,3),(7,4),(8,4),(9,4),(9,5),(9,6),(9,7),(9,8),(8,8),(7,8),(7,7),(7,6),(6,6),(5,6),
     (5,7),(5,8),(5,9)
 ]
+ """
+PATH_EXAMPLE = limpiar_route(CITY_MATRIX)
 
 @eel.expose
 def obtener_ruta():
