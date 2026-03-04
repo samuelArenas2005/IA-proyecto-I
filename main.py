@@ -45,54 +45,6 @@ def obtener_ruta():
     return PATH_EXAMPLE
 
 
-@eel.expose
-def guardar_matriz_ciudad(nueva_matriz):
-    """Recibe una matriz 10×10 desde el editor JS y la aplica como CITY_MATRIX."""
-    global CITY_MATRIX
-    # Validaciones básicas
-    if not isinstance(nueva_matriz, list) or len(nueva_matriz) != 10:
-        return {"ok": False, "error": "La matriz debe tener exactamente 10 filas."}
-    for fila in nueva_matriz:
-        if not isinstance(fila, list) or len(fila) != 10:
-            return {"ok": False, "error": "Cada fila debe tener exactamente 10 columnas."}
-        for val in fila:
-            if val not in (0, 1, 2, 3, 4, 5):
-                return {"ok": False, "error": f"Valor inválido en la matriz: {val}"}
-
-    CITY_MATRIX = [list(row) for row in nueva_matriz]
-    print(f"[Editor] Mapa guardado:\n" +
-          "\n".join("  " + str(r) for r in CITY_MATRIX))
-    return {"ok": True}
-
-
-@eel.expose
-def guardar_ruta(nueva_ruta):
-    """Recibe la ruta definida en el editor JS y actualiza PATH_EXAMPLE."""
-    global PATH_EXAMPLE
-    if not isinstance(nueva_ruta, list) or len(nueva_ruta) < 2:
-        return {"ok": False, "error": "La ruta debe tener al menos 2 pasos."}
-
-    # Verificar que el primer paso corresponde al inicio del carro (tile 2)
-    first_row, first_col = nueva_ruta[0]
-    if CITY_MATRIX[first_row][first_col] != 2:
-        return {
-            "ok": False,
-            "error": f"El primer paso [{first_row},{first_col}] no es el inicio del carro (tile 2)."
-        }
-
-    # Verificar que ningún paso caiga en edificio/parque/casa (tile 1)
-    for step in nueva_ruta:
-        r, c = step
-        if not (0 <= r < 10 and 0 <= c < 10):
-            return {"ok": False, "error": f"Paso fuera del mapa: [{r},{c}]"}
-        if CITY_MATRIX[r][c] == 1:
-            return {"ok": False, "error": f"El paso [{r},{c}] cae en un edificio/parque (tile 1)."}
-
-    PATH_EXAMPLE = [tuple(step) for step in nueva_ruta]
-    print(f"[Editor] Ruta guardada ({len(PATH_EXAMPLE)} pasos):")
-    print(f"  PATH_EXAMPLE = {PATH_EXAMPLE}")
-    return {"ok": True, "steps": len(PATH_EXAMPLE)}
-
 
 # ─── Punto de entrada ─────────────────────────────────────────────────────────
 if __name__ == '__main__':
@@ -103,3 +55,5 @@ if __name__ == '__main__':
         position=(0,0),   # Posición en pantalla
         mode='chrome'
     )
+
+
