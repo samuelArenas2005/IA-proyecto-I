@@ -99,6 +99,7 @@ if __name__ == '__main__':
     print("Iniciando aplicación con Eel...")
     eel.start(
         'menu.html',           # Pantalla de inicio
-        size=(1100, 720),      # Tamaño de la ventana
-        position=(100, 60)   # Posición en pantalla
+        size=(1920, 1080),      # Tamaño de la ventana
+        position=(0,0),   # Posición en pantalla
+        mode='chrome'
     )

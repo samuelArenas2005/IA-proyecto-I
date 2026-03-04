@@ -51,5 +51,5 @@ document.addEventListener('DOMContentLoaded', cargarMapa);
 // ── Volver al menú ─────────────────────────────────────────────
 window.irAlMenu = function() {
   document.body.classList.add('fade-out');
-  setTimeout(() => { window.location.href = 'menu.html'; }, 450);
+  setTimeout(() => { window.location.href = '../menu.html'; }, 450);
 };

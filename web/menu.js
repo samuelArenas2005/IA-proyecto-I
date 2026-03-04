@@ -338,7 +338,7 @@ window.irAlJuego = function() {
       requestAnimationFrame(animateZoom);
     } else {
       // Navegar cuando termina la animación
-      window.location.href = 'index.html';
+      window.location.href = 'RenderMap/index.html';
     }
   }
   requestAnimationFrame(animateZoom);
@@ -376,7 +376,7 @@ window.irAlCrearMapa = function() {
     if (t < 1) {
       requestAnimationFrame(animateZoom);
     } else {
-      window.location.href = 'CreateMapa/index.html';
+      window.location.href = 'CreateMap/index.html';
     }
   }
   requestAnimationFrame(animateZoom);
