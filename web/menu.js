@@ -1,16 +1,7 @@
-// ══════════════════════════════════════════════════════════════
-//  menu.js — Lógica Three.js de la pantalla de inicio
-//  Requiere importmap con "three" → Three.js ESM
-// ══════════════════════════════════════════════════════════════
+﻿import * as THREE from 'three';
 
-import * as THREE from 'three';
-
-// ════════════════════════════════════════════════
-//  DATOS DEL MAPA
-// ════════════════════════════════════════════════
 const TILE = 2;
 const GRID = 10;
-
 const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
 const CAR_PALETTE      = [0xff6b6b, 0xffa94d, 0x69db7c, 0x74c0fc, 0xf783ac];
 const ROAD_COLOR       = 0x343a50;
@@ -38,9 +29,6 @@ const DEFAULT_MATRIX = [
   [0,0,0,1,0,0,0,0,0,1],
 ];
 
-// ════════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════════
 function darken(hex, f) {
   const r = ((hex >> 16) & 0xff) * f | 0;
   const g = ((hex >>  8) & 0xff) * f | 0;
@@ -54,11 +42,6 @@ function em(geo, color, intensity = .8) {
   return mm(geo, color, { emissive: color, emissiveIntensity: intensity });
 }
 
-// ════════════════════════════════════════════════
-//  CONSTRUCTOR DE ESCENA REUTILIZABLE
-//  Devuelve { scene, cityPivot, gnd, grid, OFF, startX, startZ }
-//  cityPivot = Group centrado en el origen
-// ════════════════════════════════════════════════
 function buildScene(matrix, TS, opts = {}) {
   const { heightScale = 1 } = opts;
   const G   = GRID;
@@ -83,7 +66,6 @@ function buildScene(matrix, TS, opts = {}) {
   scene.background = new THREE.Color(0x1a1d33);
   scene.fog = new THREE.Fog(0x1a1d33, 80*TS, 260*TS);
 
-  // Iluminación
   scene.add(new THREE.AmbientLight(0xffffff, 1.4));
   const sun  = new THREE.DirectionalLight(0xfff8e7, 2.0);
   sun.position.set(25*TS, 40*TS, 20*TS); scene.add(sun);
@@ -95,7 +77,6 @@ function buildScene(matrix, TS, opts = {}) {
   const cityPivot = new THREE.Group();
   scene.add(cityPivot);
 
-  // Suelo y grid
   const gnd = mm(gGround, GROUND_COLOR);
   gnd.rotation.x = -Math.PI / 2;
   gnd.position.set(OFF, -.08*TS, OFF);
@@ -105,7 +86,6 @@ function buildScene(matrix, TS, opts = {}) {
   grid.position.set(OFF, -.05*TS, OFF);
   cityPivot.add(grid);
 
-  // ── Builders ──
   function roadBase() {
     const g = new THREE.Group();
     const road = mm(gRoad, ROAD_COLOR); road.position.y = .05*TS; g.add(road);
@@ -119,13 +99,13 @@ function buildScene(matrix, TS, opts = {}) {
     const color  = BUILDING_PALETTE[(row*3+col*5) % BUILDING_PALETTE.length];
     const bGeo   = new THREE.BoxGeometry(TS*.68, height, TS*.68);
     const bMesh  = mm(bGeo, color); bMesh.position.y=.13*TS+height/2; g.add(bMesh);
-    const roof   = mm(gRoof, darken(color,.55)); roof.position.y=.13*TS+height+.05*TS; g.add(roof);
+    const roof   = mm(gRoof, darken(color,.55)); roof.position.y=.13*TS+height+.05*TS; g.add(roof);       
     const floors = Math.floor(height/(.75*TS));
     for (let fy=0; fy<floors; fy++) {
       const wy = .13*TS + .45*TS + fy*.72*TS;
       [-1,1].forEach(s => {
-        const wf = em(gWindow,0xfff0a0,.95); wf.position.set(s*.22*TS,wy,TS*.34+.01*TS); g.add(wf);
-        const ws = em(gWindow,0xfff0a0,.95); ws.position.set(TS*.34+.01*TS,wy,s*.22*TS); g.add(ws);
+        const wf = em(gWindow,0xfff0a0,.95); wf.position.set(s*.22*TS,wy,TS*.34+.01*TS); g.add(wf);       
+        const ws = em(gWindow,0xfff0a0,.95); ws.position.set(TS*.34+.01*TS,wy,s*.22*TS); g.add(ws);       
       });
     }
     return g;
@@ -149,7 +129,7 @@ function buildScene(matrix, TS, opts = {}) {
     const g = roadBase();
     const mk   = mm(gMarker,0xffffff,{transparent:true,opacity:.15});
     mk.rotation.x=-Math.PI/2; mk.position.y=.11*TS; g.add(mk);
-    const ring = em(gRing,0xff6b6b,.8); ring.rotation.x=Math.PI/2; ring.position.y=.115*TS; g.add(ring);
+    const ring = em(gRing,0xff6b6b,.8); ring.rotation.x=Math.PI/2; ring.position.y=.115*TS; g.add(ring);  
     const pole = mm(gPole,0xadb5bd); pole.position.set(-.35*TS,.55*TS,-.35*TS); g.add(pole);
     const flag = em(gFlag,0xff6b6b,.7); flag.position.set(-.15*TS,.87*TS,-.35*TS); g.add(flag);
     return g;
@@ -165,7 +145,7 @@ function buildScene(matrix, TS, opts = {}) {
       const cb = mm(cBod,col2); cb.position.y=.1*TS; gc.add(cb);
       const ct = mm(cTop,darken(col2,.75)); ct.position.set(-.04*TS,.245*TS,0); gc.add(ct);
       [[-0.19,-.12],[-.19,.12],[.19,-.12],[.19,.12]].forEach(([wx,wz])=>{
-        const w=mm(cWh,0x1a1d2e); w.rotation.z=Math.PI/2; w.position.set(wx*TS,.055*TS,wz*TS); gc.add(w);
+        const w=mm(cWh,0x1a1d2e); w.rotation.z=Math.PI/2; w.position.set(wx*TS,.055*TS,wz*TS); gc.add(w); 
       });
       gc.position.set(ox,.055*TS,oz); return gc;
     }
@@ -193,7 +173,7 @@ function buildScene(matrix, TS, opts = {}) {
       const x = col*TS + TS/2;
       const z = row*TS + TS/2;
       let tg;
-      if      (val===1) tg = PARK_POSITIONS.has(`${row},${col}`) ? parkTile() : buildingTile(row,col);
+      if      (val===1) tg = PARK_POSITIONS.has(`${row},${col}`) ? parkTile() : buildingTile(row,col);    
       else if (val===2) { tg = tile2(); startX=x; startZ=z; }
       else if (val===3) tg = tile3(row,col);
       else if (val===4) tg = tile4();
@@ -204,21 +184,14 @@ function buildScene(matrix, TS, opts = {}) {
     }
   }
 
-  // Centrar pivot en el origen
   cityPivot.position.set(-OFF, 0, -OFF);
-
   return { scene, cityPivot, gnd, grid, OFF, startX, startZ };
 }
 
-// ════════════════════════════════════════════════
-//  FONDO ANIMADO — cámara orbita, carro en ruta
-// ════════════════════════════════════════════════
 (function buildBackground(matrix) {
   const container = document.getElementById('bg-canvas');
   const W = window.innerWidth, H = window.innerHeight;
-
   const { scene, cityPivot, OFF, startX, startZ } = buildScene(matrix, TILE);
-
   const frust = 28, dist = 55;
   const aspect = W / H;
   const camera = new THREE.OrthographicCamera(
@@ -226,15 +199,12 @@ function buildScene(matrix, TS, opts = {}) {
   );
   camera.zoom = 1.65;
   camera.updateProjectionMatrix();
-  window._menuCamera = camera;   // exponer para la animación de irAlJuego
-
+  window._menuCamera = camera;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(W, H);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
-
-  // Carro recorriendo la ruta
   const TS = TILE;
   const carBodyGeo = new THREE.BoxGeometry(.58*TS,.2*TS,.34*TS);
   const carTopGeo  = new THREE.BoxGeometry(.34*TS,.15*TS,.28*TS);
@@ -252,24 +222,19 @@ function buildScene(matrix, TS, opts = {}) {
   playerCar.add(cb); playerCar.add(ct);
   playerCar.position.set(startX, 0, startZ);
   cityPivot.add(playerCar);
-
   let pathIdx = 0, moveProg = 0;
   const path = PATH_EXAMPLE;
-
   let orbitAngle = Math.PI / 4;
   const ORBIT_R = dist * .60 * Math.SQRT2;
   const ORBIT_H = dist * .55;
   const ORBIT_S = 0.00035;
-
   window.addEventListener('resize', () => {
     const nW=window.innerWidth, nH=window.innerHeight, nA=nW/nH;
     camera.left=-frust*nA/2; camera.right=frust*nA/2;
     camera.updateProjectionMatrix(); renderer.setSize(nW,nH);
   });
-
   function loop() {
     requestAnimationFrame(loop);
-
     if (path.length > 1) {
       moveProg += 0.011;
       if (moveProg >= 1) { moveProg=0; pathIdx++; if (pathIdx >= path.length-1) pathIdx=0; }
@@ -285,68 +250,79 @@ function buildScene(matrix, TS, opts = {}) {
         playerCar.rotation.y += d*0.12;
       }
     }
-
     orbitAngle += ORBIT_S;
-    camera.position.set(
-      OFF + Math.cos(orbitAngle)*ORBIT_R,
-      ORBIT_H,
-      OFF + Math.sin(orbitAngle)*ORBIT_R
-    );
+    camera.position.set(OFF + Math.cos(orbitAngle)*ORBIT_R, ORBIT_H, OFF + Math.sin(orbitAngle)*ORBIT_R);
     camera.lookAt(OFF, 1, OFF);
-
     renderer.render(scene, camera);
   }
   loop();
 })(DEFAULT_MATRIX);
 
-// ════════════════════════════════════════════════
-//  NAVEGACIÓN — con transición zoom-in al mapa
-// ════════════════════════════════════════════════
 window.irAlJuego = function() {
+  const mainPanel = document.getElementById('main-panel');
+  const algoPanel = document.getElementById('algoritmo-panel');
+  mainPanel.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  mainPanel.style.opacity = '0';
+  mainPanel.style.transform = 'translateY(-20px)';
+  setTimeout(() => {
+    mainPanel.style.display = 'none';
+    algoPanel.style.display = 'flex';
+    algoPanel.offsetHeight;
+    algoPanel.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    algoPanel.style.opacity = '1';
+    algoPanel.style.transform = 'translateY(0)';
+  }, 400);
+};
+
+window.regresarAlMenu = function() {
+  const mainPanel = document.getElementById('main-panel');
+  const algoPanel = document.getElementById('algoritmo-panel');
+  algoPanel.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  algoPanel.style.opacity = '0';
+  algoPanel.style.transform = 'translateY(20px)';
+  setTimeout(() => {
+    algoPanel.style.display = 'none';
+    mainPanel.style.display = 'flex';
+    mainPanel.offsetHeight;
+    mainPanel.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    mainPanel.style.opacity = '1';
+    mainPanel.style.transform = 'translateY(0)';
+  }, 400);
+};
+
+window.seleccionarAlgoritmo = function(tipo) {
   const root    = document.getElementById('menu-root');
   const bgEl    = document.getElementById('bg-canvas');
   const overlay = document.getElementById('overlay');
-  const camera  = window._menuCamera;        // referencia a la cámara del fondo
-  const DURATION = 1100;                     // ms totales de transición
+  const camera  = window._menuCamera;
+  const DURATION = 1100;
   const startTime = performance.now();
   const startZoom = camera ? camera.zoom : 1.65;
-  const targetZoom = startZoom * 5.5;        // cuánto se acerca antes de cortar
-
-  // Fade-out del panel y overlay simultáneos con zoom-in
+  const targetZoom = startZoom * 5.5;
+  console.log("Algoritmo seleccionado:", tipo);
   root.style.transition    = `opacity ${DURATION * 0.55}ms ease`;
   overlay.style.transition = `opacity ${DURATION * 0.7}ms ease`;
   root.style.opacity    = '0';
   overlay.style.opacity = '0';
-
-  // Quitar el blur progresivamente (CSS transition sobre el filtro)
   bgEl.style.transition = `filter ${DURATION * 0.85}ms ease`;
   bgEl.style.filter     = 'blur(0px) brightness(1) saturate(1)';
-
-  // Animar zoom-in de la cámara Three.js frame a frame
   function animateZoom(now) {
     const elapsed  = now - startTime;
     const t        = Math.min(elapsed / DURATION, 1);
-    // Ease-in-cubic para acelerar hacia el final
     const eased    = t * t * t;
-
     if (camera) {
       camera.zoom = startZoom + (targetZoom - startZoom) * eased;
       camera.updateProjectionMatrix();
     }
-
     if (t < 1) {
       requestAnimationFrame(animateZoom);
     } else {
-      // Navegar cuando termina la animación
       window.location.href = 'RenderMap/index.html';
     }
   }
   requestAnimationFrame(animateZoom);
 };
 
-// ════════════════════════════════════════════════
-//  NAVEGACIÓN — ir al editor de mapas
-// ════════════════════════════════════════════════
 window.irAlCrearMapa = function() {
   const root    = document.getElementById('menu-root');
   const bgEl    = document.getElementById('bg-canvas');
@@ -356,15 +332,12 @@ window.irAlCrearMapa = function() {
   const startTime = performance.now();
   const startZoom = camera ? camera.zoom : 1.65;
   const targetZoom = startZoom * 3.5;
-
   root.style.transition    = `opacity ${DURATION * 0.5}ms ease`;
   overlay.style.transition = `opacity ${DURATION * 0.6}ms ease`;
   root.style.opacity    = '0';
   overlay.style.opacity = '0';
-
   bgEl.style.transition = `filter ${DURATION * 0.8}ms ease`;
   bgEl.style.filter     = 'blur(0px) brightness(1) saturate(1)';
-
   function animateZoom(now) {
     const elapsed = now - startTime;
     const t       = Math.min(elapsed / DURATION, 1);

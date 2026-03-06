@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -35,8 +35,66 @@
   <!-- Layout principal -->
   <main id="menu-root">
 
+    <!-- Panel de selección de algoritmos (oculto por defecto) -->
+    <div id="algoritmo-panel" class="menu-panel" style="display: none; opacity: 0;">
+      <div class="brand-tag">Seleccionar Algoritmo</div>
+      <h1 class="brand-title">Tipo de<br>Búsqueda</h1>
+      <p class="brand-sub">Escoge el método para resolver el mapa</p>
+
+      <div class="menu-sep"></div>
+
+      <nav class="menu-buttons" aria-label="Selección de algoritmo">
+
+        <!-- AMPLITUD – habilitado -->
+        <button id="btn-amplitud" class="menu-btn menu-btn--active"
+                onclick="seleccionarAlgoritmo('amplitud')" title="Búsqueda por Amplitud">
+          <span class="menu-btn__icon"><i class="fa-solid fa-arrows-to-dot"></i></span>
+          <span class="menu-btn__label">Amplitud</span>
+          <span class="menu-btn__badge">Disponible</span>
+        </button>
+
+        <!-- COSTO UNIFORME -->
+        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-coins"></i></span>
+          <span class="menu-btn__label">Costo Uniforme</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+
+        <!-- PROFUNDIDAD -->
+        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-layer-group"></i></span>
+          <span class="menu-btn__label">Profundidad</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+
+        <!-- AVARA -->
+        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-bolt"></i></span>
+          <span class="menu-btn__label">Avara</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+
+        <!-- A* -->
+        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+          <span class="menu-btn__icon"><i class="fa-solid fa-star"></i></span>
+          <span class="menu-btn__label">A*</span>
+          <span class="menu-btn__badge">Próximamente</span>
+        </button>
+        
+        <div class="menu-sep" style="margin: 10px 0;"></div>
+        
+        <!-- REGRESAR -->
+        <button class="menu-btn" style="background: rgba(255,255,255,0.05); color: #fff;" 
+                onclick="regresarAlMenu()" title="Volver al menú principal">
+          <span class="menu-btn__icon"><i class="fa-solid fa-arrow-left"></i></span>
+          <span class="menu-btn__label">Regresar</span>
+        </button>
+
+      </nav>
+    </div>
+
     <!-- Panel de botones -->
-    <div class="menu-panel">
+    <div class="menu-panel" id="main-panel">
       <div class="brand-tag">Simulador IA</div>
       <h1 class="brand-title">Ciudad<br>10 × 10</h1>
       <p class="brand-sub">Motor de rutas con inteligencia artificial</p>

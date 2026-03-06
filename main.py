@@ -5,7 +5,7 @@ from busquedaAmplitud import limpiar_route
 eel.init('web')  # Carpeta donde está el frontend
 
 # ─── Mapa de la ciudad 10×10 ──────────────────────────────────────────────────
-# 0=calle  1=edificio/parque  2=inicio carro  3=calle+carros  4=calle+persona  5=calle+meta
+# 0=calle  1=edificio/parque  2=inicio carro  3=calle+semaforo 4=calle+persona  5=calle+meta
 CITY_MATRIX = [
     [4, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [0, 1, 1, 0, 0, 0, 3, 0, 0, 0],
@@ -14,7 +14,7 @@ CITY_MATRIX = [
     [0, 1, 1, 0, 1, 1, 1, 1, 1, 0],
     [0, 0, 0, 0, 1, 1, 0, 0, 0, 5],
     [4, 1, 1, 1, 1, 1, 0, 1, 1, 1],
-    [0, 1, 0, 0, 4, 1, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
     [0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
 ]

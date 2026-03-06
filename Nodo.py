@@ -2,11 +2,12 @@ from Formulacion import *
 
 class Nodo:
     
-    def __init__(self, Status, Path, Route, People):
+    def __init__(self, Status, Path, Route, People,Cost):
         self.Status = Status
         self.Path = Path
         self.Route = Route
         self.People = People
+        self.Cost = Cost
         
 
     def expandir_amplitud(self,map):
@@ -32,7 +33,8 @@ class Nodo:
                         people = self.People | {(new_posX, new_posY)}
                     else:
                         people = self.People
-                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people)
+                    new_cost = self.Cost + add_cost(map,new_posX,new_posY)
+                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people,new_cost)
                     nodosHijos.append(nodoHijo)
         
         return nodosHijos
