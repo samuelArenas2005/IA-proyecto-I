@@ -1,6 +1,7 @@
 from Nodo import Nodo
 from Formulacion import *
 import copy
+from collections import deque
 
 def get_ubication_start(map):
     for i in range(len(map)):
@@ -20,14 +21,14 @@ def number_peoples(map):
 def get_nodo_raiz(map):
     startX, startY = get_ubication_start(map)
     statusNodoRaiz = Status(startX,startY,0)
-    nodoRaiz = Nodo(None,statusNodoRaiz,[statusNodoRaiz.get_values()],[])
+    nodoRaiz = Nodo(statusNodoRaiz,[statusNodoRaiz.get_values()],{statusNodoRaiz.get_values()},set())
     
     return nodoRaiz
 
 
 def busqueda_amplitud(map):
     
-    cola = []
+    cola = deque()
     cola.append(get_nodo_raiz(map))
     nPeople = number_peoples(map)
     
@@ -35,12 +36,12 @@ def busqueda_amplitud(map):
         if len(cola) == 0:
             return False
         
-        n = cola.pop(0)
+        n = cola.popleft()
         
         if is_goal(map,n.Status,nPeople):
             return n
         
-        hijos = n.expandir_amplitud(map,n)
+        hijos = n.expandir_amplitud(map)
         cola.extend(hijos)
     
     
@@ -52,22 +53,22 @@ CITY_MATRIX = [
     [0, 1, 1, 0, 1, 1, 1, 1, 1, 0],
     [0, 0, 0, 0, 1, 1, 0, 0, 0, 5],
     [4, 1, 1, 1, 1, 1, 0, 1, 1, 1],
-    [0, 1, 0, 4, 0, 1, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
     [0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
 ]
 
 nodoMeta = busqueda_amplitud(CITY_MATRIX)
 
-print(nodoMeta.Route) 
+print(nodoMeta.Path) 
 
 def limpiar_route(map):
     nodoMeta = busqueda_amplitud(map)
-    ruta = nodoMeta.Route
+    ruta = nodoMeta.Path
     rutaLimpia = []
     for elem in ruta:
         rutaLimpia.append((elem[0],elem[1]))
         
     return rutaLimpia
 
-rutaLim = limpiar_route(CITY_MATRIX)
+
