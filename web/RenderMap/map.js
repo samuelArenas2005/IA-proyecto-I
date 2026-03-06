@@ -343,7 +343,7 @@ function buildCity(matrix) {
   const dist = 55;
   camera.position.set(OFFSET + dist * .85, dist * .7, OFFSET + dist * .85);
   camera.lookAt(OFFSET, 0, OFFSET);
-  camera.zoom = 1.1;
+  camera.zoom = 0.85; // Vista lejana por defecto
   camera.updateProjectionMatrix();
 
   // ── Renderer ──
@@ -365,48 +365,45 @@ function buildCity(matrix) {
   controls.maxPolarAngle = Math.PI / 2.1;
   controls.update();
 
-  // ── Cámara en primera persona (POV) ──
+  // ── Cámara POV (sigue al vehículo) ──
+  // Estado: 0=vista lejana, 1=POV (dentro del carro), 2=POV alejamiento 1, 3=POV alejamiento 2
+  const POV_DIST = [0, 4, 8]; // 0=encima, 4 y 8=detrás
+  const POV_HEIGHT = [0.35, 1.5, 3]; // altura según alejamiento
   const povCamera = new THREE.PerspectiveCamera(70, W / H, 0.05, 100);
   const povControls = new OrbitControls(povCamera, renderer.domElement);
-  // Restringir el OrbitControls de POV
   povControls.enablePan = false;
-  povControls.enableZoom = false; // No alejarse del coche para no romper la ilusión
-  povControls.minPolarAngle = Math.PI * 0.35; 
-  povControls.maxPolarAngle = Math.PI * 0.55; // Mirar arriba/abajo moderadamente
-
-  let isPovMode = false;
+  povControls.enableZoom = false;
+  povControls.minPolarAngle = Math.PI * 0.35;
+  povControls.maxPolarAngle = Math.PI * 0.55;
+  let povState = 0; // 0=off, 1=POV, 2=alej1, 3=alej2
+  let lastPovState = -1;
 
   // botones externos
-  document.getElementById('btn-zoom-in').onclick  = () => { if (!isPovMode) { camera.zoom = Math.min(camera.zoom * 1.22, 4); camera.updateProjectionMatrix(); } };
-  document.getElementById('btn-zoom-out').onclick = () => { if (!isPovMode) { camera.zoom = Math.max(camera.zoom / 1.22, .4); camera.updateProjectionMatrix(); } };
+  document.getElementById('btn-zoom-in').onclick  = () => { if (povState === 0) { camera.zoom = Math.min(camera.zoom * 1.22, 4); camera.updateProjectionMatrix(); } };
+  document.getElementById('btn-zoom-out').onclick = () => { if (povState === 0) { camera.zoom = Math.max(camera.zoom / 1.22, .4); camera.updateProjectionMatrix(); } };
   document.getElementById('btn-reset-cam').onclick = () => {
-    isPovMode = false;
-    document.getElementById('btn-pov').style.color = '';
+    povState = 0;
+    lastPovState = -1;
+    const btnPov = document.getElementById('btn-pov');
+    btnPov.style.color = '';
+    btnPov.title = 'Vista lejana · 1º click: POV';
     camera.position.set(OFFSET + dist * .85, dist * .7, OFFSET + dist * .85);
-    camera.zoom = 1.1; camera.updateProjectionMatrix();
+    camera.zoom = 0.85; camera.updateProjectionMatrix();
     controls.target.set(OFFSET, 0, OFFSET); 
     controls.update();
   };
   
   document.getElementById('btn-pov').onclick = () => {
-     isPovMode = !isPovMode;
-     const btnPov = document.getElementById('btn-pov');
-     if (isPovMode) {
-         btnPov.style.color = '#74c0fc'; // activo
-         // Configuración inicial de la cámara POV para mirar al frente del coche
-         const tAngle = playerCar.rotation.y;
-         const forwardX = Math.cos(tAngle);
-         const forwardZ = -Math.sin(tAngle);
-         povControls.target.set(
-             playerCar.position.x + forwardX * 5, 
-             playerCar.position.y + 0.3, 
-             playerCar.position.z + forwardZ * 5
-         );
-         povControls.update();
-     } else {
-         btnPov.style.color = ''; // volver al color original
-         controls.update(); // Restaurar main orbit
-     }
+    const btnPov = document.getElementById('btn-pov');
+    povState = (povState + 1) % 4; // 0→1→2→3→0
+    if (povState === 0) {
+      lastPovState = -1;
+      btnPov.style.color = '';
+      btnPov.title = 'Vista lejana · 1º click: POV';
+    } else {
+      btnPov.style.color = '#74c0fc';
+      btnPov.title = povState === 1 ? 'POV activo · Click: alejar' : `POV alejamiento ${povState} · Click: siguiente`;
+    }
   };
 
   // ══ ILUMINACIÓN BRILLANTE ═══════════════════════════════════════════════════
@@ -839,31 +836,50 @@ function buildCity(matrix) {
       }
     }
 
-    if (isPovMode) {
-        // Fijar la cámara en primera persona al auto
+    if (povState > 0) {
+        // POV: 1=encima del carro (original), 2-3=alejamientos detrás
+        const idx = povState - 1;
+        const distPov = POV_DIST[idx];
+        const heightPov = POV_HEIGHT[idx];
         const angle = playerCar.rotation.y;
-        
-        // Colocar la cámara en el centro del carro un poco elevada
+        const behindX = -Math.cos(angle) * distPov;
+        const behindZ = Math.sin(angle) * distPov;
         povCamera.position.set(
-            playerCar.position.x,
-            playerCar.position.y + 0.35, 
-            playerCar.position.z
+            playerCar.position.x + behindX,
+            playerCar.position.y + heightPov,
+            playerCar.position.z + behindZ
         );
-        
-        // Para que se pueda mirar con el mouse, el punto del OrbitControls avanza 
-        // junto con el vehiculo de manera constante.
-        const focusDist = 5;
-        // Obtenemos el vector de direccion desde la camara al objetivo actual del control
-        const dir = new THREE.Vector3();
-        povCamera.getWorldDirection(dir);
-        
-        // Empujamos el objetivo de los controles a esa distancia relativa
-        povControls.target.set(
-            playerCar.position.x + dir.x * focusDist,
-            playerCar.position.y + 0.35 + dir.y * focusDist,
-            playerCar.position.z + dir.z * focusDist
-        );
-
+        if (povState === 1) {
+            // POV original: target adelante para poder mirar con el mouse
+            const focusDist = 5;
+            if (lastPovState !== 1) {
+                // Primera vez en POV: mirar hacia adelante (dirección del carro)
+                const fwdX = Math.cos(angle);
+                const fwdZ = -Math.sin(angle);
+                povControls.target.set(
+                    playerCar.position.x + fwdX * focusDist,
+                    playerCar.position.y + 0.35,
+                    playerCar.position.z + fwdZ * focusDist
+                );
+            } else {
+                const dir = new THREE.Vector3();
+                povCamera.getWorldDirection(dir);
+                povControls.target.set(
+                    playerCar.position.x + dir.x * focusDist,
+                    playerCar.position.y + 0.35 + dir.y * focusDist,
+                    playerCar.position.z + dir.z * focusDist
+                );
+            }
+            lastPovState = 1;
+        } else {
+            // Alejamientos: mirar al vehículo
+            povControls.target.set(
+                playerCar.position.x,
+                playerCar.position.y + 0.5,
+                playerCar.position.z
+            );
+        }
+        if (povState >= 2) lastPovState = povState;
         povControls.update();
         renderer.render(scene, povCamera);
     } else {
