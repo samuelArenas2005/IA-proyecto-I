@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 
 const TILE = 2;
 const GRID = 10;
@@ -188,6 +188,54 @@ function buildScene(matrix, TS, opts = {}) {
   return { scene, cityPivot, gnd, grid, OFF, startX, startZ };
 }
 
+// ── Fábrica de Vehículos ───────────────────────────────────────────────────
+function createCar(TS, color) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.58*TS,.2*TS,.34*TS), new THREE.MeshLambertMaterial({color}));
+  body.position.y = .1*TS;
+  const top = new THREE.Mesh(new THREE.BoxGeometry(.34*TS,.15*TS,.28*TS), new THREE.MeshLambertMaterial({color: darken(color, .75)}));
+  top.position.set(-.04*TS,.245*TS,0);
+  [[-0.19,-.12],[-.19,.12],[.19,-.12],[.19,.12]].forEach(([wx,wz])=>{
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.065*TS,.065*TS,.07*TS,8), new THREE.MeshLambertMaterial({color:0x1a1d2e}));
+    w.rotation.z=Math.PI/2; w.position.set(wx*TS,.055*TS,wz*TS); g.add(w);
+  });
+  g.add(body); g.add(top);
+  return g;
+}
+
+function createMoto(TS, color) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.45*TS,.15*TS,.12*TS), new THREE.MeshLambertMaterial({color}));
+  body.position.y = .15*TS;
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(.25*TS,.05*TS,.1*TS), new THREE.MeshLambertMaterial({color: 0x222222}));
+  seat.position.set(-.05*TS,.22*TS,0);
+  [[-.18, 0], [.18, 0]].forEach(([wx, wz]) => {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.08*TS,.08*TS,.05*TS,8), new THREE.MeshLambertMaterial({color:0x111111}));
+    w.rotation.z=Math.PI/2; w.position.set(wx*TS,.08*TS,wz*TS); g.add(w);
+  });
+  g.add(body); g.add(seat);
+  return g;
+}
+
+function createHelicopter(TS, color) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.25*TS, 8, 8), new THREE.MeshLambertMaterial({color}));
+  body.scale.set(1.4, 1, 1);
+  body.position.y = .35*TS;
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(.4*TS, .08*TS, .08*TS), new THREE.MeshLambertMaterial({color}));
+  tail.position.set(-.35*TS, .35*TS, 0);
+  const skidL = new THREE.Mesh(new THREE.BoxGeometry(.5*TS,.04*TS,.04*TS), new THREE.MeshLambertMaterial({color: 0x555555}));
+  skidL.position.set(0, .1*TS, .15*TS);
+  const skidR = skidL.clone(); skidR.position.z = -.15*TS;
+  const rotorAxis = new THREE.Mesh(new THREE.CylinderGeometry(.02*TS, .02*TS, .15*TS, 8), new THREE.MeshLambertMaterial({color: 0x333333}));
+  rotorAxis.position.y = .55*TS;
+  const blades = new THREE.Mesh(new THREE.BoxGeometry(.8*TS, .01*TS, .08*TS), new THREE.MeshLambertMaterial({color: 0x222222}));
+  blades.position.y = .63*TS;
+  g.add(body); g.add(tail); g.add(skidL); g.add(skidR); g.add(rotorAxis); g.add(blades);
+  g.userData.blades = blades;
+  return g;
+}
+
 (function buildBackground(matrix) {
   const container = document.getElementById('bg-canvas');
   const W = window.innerWidth, H = window.innerHeight;
@@ -206,28 +254,28 @@ function buildScene(matrix, TS, opts = {}) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
   const TS = TILE;
-  const carBodyGeo = new THREE.BoxGeometry(.58*TS,.2*TS,.34*TS);
-  const carTopGeo  = new THREE.BoxGeometry(.34*TS,.15*TS,.28*TS);
-  const wheelGeo   = new THREE.CylinderGeometry(.065*TS,.065*TS,.07*TS,8);
   const carCol = CAR_PALETTE[1];
-  const playerCar = new THREE.Group();
-  const cb = new THREE.Mesh(carBodyGeo, new THREE.MeshLambertMaterial({color:carCol}));
-  cb.position.y=.1*TS;
-  const ct = new THREE.Mesh(carTopGeo, new THREE.MeshLambertMaterial({color:darken(carCol,.75)}));
-  ct.position.set(-.04*TS,.245*TS,0);
-  [[-0.19,-.12],[-.19,.12],[.19,-.12],[.19,.12]].forEach(([wx,wz])=>{
-    const w=new THREE.Mesh(wheelGeo,new THREE.MeshLambertMaterial({color:0x1a1d2e}));
-    w.rotation.z=Math.PI/2; w.position.set(wx*TS,.055*TS,wz*TS); playerCar.add(w);
-  });
-  playerCar.add(cb); playerCar.add(ct);
+  let playerCar = createCar(TS, carCol);
   playerCar.position.set(startX, 0, startZ);
   cityPivot.add(playerCar);
+  window._playerCarPivot = playerCar;
+
   let pathIdx = 0, moveProg = 0;
   const path = PATH_EXAMPLE;
   let orbitAngle = Math.PI / 4;
   const ORBIT_R = dist * .60 * Math.SQRT2;
   const ORBIT_H = dist * .55;
   const ORBIT_S = 0.00035;
+
+  window.actualizarPreviewVehiculo = function(tipo) {
+    cityPivot.remove(playerCar);
+    if (tipo === 'carro') playerCar = createCar(TS, carCol);
+    else if (tipo === 'moto') playerCar = createMoto(TS, carCol);
+    else if (tipo === 'helicoptero') playerCar = createHelicopter(TS, carCol);
+    playerCar.position.set(startX, 0, startZ);
+    cityPivot.add(playerCar);
+    window._playerCarPivot = playerCar;
+  };
   window.addEventListener('resize', () => {
     const nW=window.innerWidth, nH=window.innerHeight, nA=nW/nH;
     camera.left=-frust*nA/2; camera.right=frust*nA/2;
@@ -235,6 +283,10 @@ function buildScene(matrix, TS, opts = {}) {
   });
   function loop() {
     requestAnimationFrame(loop);
+    // Rotor animation
+    if (playerCar && playerCar.userData.blades) {
+        playerCar.userData.blades.rotation.y += 0.3;
+    }
     if (path.length > 1) {
       moveProg += 0.011;
       if (moveProg >= 1) { moveProg=0; pathIdx++; if (pathIdx >= path.length-1) pathIdx=0; }
@@ -300,6 +352,12 @@ window.seleccionarAlgoritmo = function(tipo) {
   const startZoom = camera ? camera.zoom : 1.65;
   const targetZoom = startZoom * 5.5;
   console.log("Algoritmo seleccionado:", tipo);
+  
+  // Informar al backend la selección
+  if (typeof eel !== 'undefined') {
+    eel.seleccionar_algoritmo(tipo)();
+  }
+
   root.style.transition    = `opacity ${DURATION * 0.55}ms ease`;
   overlay.style.transition = `opacity ${DURATION * 0.7}ms ease`;
   root.style.opacity    = '0';
@@ -321,6 +379,35 @@ window.seleccionarAlgoritmo = function(tipo) {
     }
   }
   requestAnimationFrame(animateZoom);
+};
+
+window.abrirModalVehiculo = function() {
+  const modal = document.getElementById('vehiculo-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+};
+
+window.cerrarModalVehiculo = function() {
+  const modal = document.getElementById('vehiculo-modal');
+  modal.style.opacity = '0';
+  setTimeout(() => modal.style.display = 'none', 400);
+};
+
+window.cambiarVehiculoPreview = function(tipo) {
+  if (typeof eel !== 'undefined' && eel.seleccionar_vehiculo) {
+      eel.seleccionar_vehiculo(tipo)();
+  } else {
+      console.warn("Eel: seleccionar_vehiculo no disponible en el backend");
+  }
+  
+  ['carro', 'moto', 'helicoptero'].forEach(v => {
+    const btn = document.getElementById('btn-' + v);
+    if (btn) {
+      if (v === tipo) btn.classList.add('menu-btn--active');
+      else btn.classList.remove('menu-btn--active');
+    }
+  });
+  if (window.actualizarPreviewVehiculo) window.actualizarPreviewVehiculo(tipo);
 };
 
 window.irAlCrearMapa = function() {

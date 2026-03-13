@@ -10,7 +10,7 @@ class Nodo:
         self.Cost = Cost
         
 
-    def expandir_amplitud(self,map):
+    def expandir_no_informada(self,city_map):
         
         posX , posY, nPeople = self.Status.get_values()
         
@@ -24,16 +24,16 @@ class Nodo:
         ]
         
         for is_locked_func, dx, dy in directions:
-            if not(is_locked_func(map, posX, posY)):
+            if not(is_locked_func(city_map, posX, posY)):
                 new_posX, new_posY = posX + dx, posY + dy
-                new_nPeople = nPeople + add_person(map, new_posX, new_posY, self.People)
+                new_nPeople = nPeople + add_person(city_map, new_posX, new_posY, self.People)
                 statusHijo = Status(new_posX, new_posY, new_nPeople)
                 if not(is_cycle(statusHijo.get_values(), self.Route)):
                     if new_nPeople > nPeople:
                         people = self.People | {(new_posX, new_posY)}
                     else:
                         people = self.People
-                    new_cost = self.Cost + add_cost(map,new_posX,new_posY)
+                    new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
                     nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people,new_cost)
                     nodosHijos.append(nodoHijo)
         

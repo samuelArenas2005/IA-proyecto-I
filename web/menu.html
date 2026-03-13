@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -37,27 +37,23 @@
 
     <!-- Panel de selección de algoritmos (oculto por defecto) -->
     <div id="algoritmo-panel" class="menu-panel" style="display: none; opacity: 0;">
-      <div class="brand-tag">Seleccionar Algoritmo</div>
+      <div class="brand-tag">Simulador IA</div>
       <h1 class="brand-title">Tipo de<br>Búsqueda</h1>
       <p class="brand-sub">Escoge el método para resolver el mapa</p>
 
       <div class="menu-sep"></div>
 
       <nav class="menu-buttons" aria-label="Selección de algoritmo">
-
-        <!-- AMPLITUD – habilitado -->
         <button id="btn-amplitud" class="menu-btn menu-btn--active"
                 onclick="seleccionarAlgoritmo('amplitud')" title="Búsqueda por Amplitud">
           <span class="menu-btn__icon"><i class="fa-solid fa-arrows-to-dot"></i></span>
           <span class="menu-btn__label">Amplitud</span>
-          <span class="menu-btn__badge">Disponible</span>
         </button>
 
-        <!-- COSTO UNIFORME -->
-        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+        <button id="btn-costo" class="menu-btn menu-btn--active"
+                onclick="seleccionarAlgoritmo('costo_uniforme')" title="Búsqueda por Costo Uniforme">
           <span class="menu-btn__icon"><i class="fa-solid fa-coins"></i></span>
           <span class="menu-btn__label">Costo Uniforme</span>
-          <span class="menu-btn__badge">Próximamente</span>
         </button>
 
         <!-- PROFUNDIDAD -->
@@ -80,17 +76,54 @@
           <span class="menu-btn__label">A*</span>
           <span class="menu-btn__badge">Próximamente</span>
         </button>
-        
+
         <div class="menu-sep" style="margin: 10px 0;"></div>
         
-        <!-- REGRESAR -->
         <button class="menu-btn" style="background: rgba(255,255,255,0.05); color: #fff;" 
                 onclick="regresarAlMenu()" title="Volver al menú principal">
           <span class="menu-btn__icon"><i class="fa-solid fa-arrow-left"></i></span>
           <span class="menu-btn__label">Regresar</span>
         </button>
-
       </nav>
+    </div>
+
+    <!-- Modal de selección de vehículos -->
+    <div id="vehiculo-modal" class="modal-overlay" style="display: none; opacity: 0;">
+      <div id="vehiculo-panel" class="menu-panel menu-panel--modal">
+        <div class="brand-tag">GARAJE</div>
+        <h1 class="brand-title">Selección<br>de Nave</h1>
+        <p class="brand-sub">Escoge tu medio de transporte</p>
+
+        <div class="menu-sep"></div>
+
+        <nav class="menu-buttons" aria-label="Selección de vehículo">
+          <button id="btn-carro" class="menu-btn menu-btn--active"
+                  onclick="cambiarVehiculoPreview('carro')" title="Coche convencional">
+            <span class="menu-btn__icon"><i class="fa-solid fa-car"></i></span>
+            <span class="menu-btn__label">Carro</span>
+          </button>
+
+          <button id="btn-moto" class="menu-btn"
+                  onclick="cambiarVehiculoPreview('moto')" title="Moto rápida">
+            <span class="menu-btn__icon"><i class="fa-solid fa-motorcycle"></i></span>
+            <span class="menu-btn__label">Moto</span>
+          </button>
+
+          <button id="btn-helicoptero" class="menu-btn"
+                  onclick="cambiarVehiculoPreview('helicoptero')" title="Transporte aéreo">
+            <span class="menu-btn__icon"><i class="fa-solid fa-helicopter"></i></span>
+            <span class="menu-btn__label">Helicóptero</span>
+          </button>
+
+          <div class="menu-sep" style="margin: 10px 0;"></div>
+
+          <button class="menu-btn menu-btn--active" style="background: var(--accent); border-color: var(--accent);"
+                  onclick="cerrarModalVehiculo()" title="Confirmar y volver">
+            <span class="menu-btn__icon"><i class="fa-solid fa-check"></i></span>
+            <span class="menu-btn__label">Listo</span>
+          </button>
+        </nav>
+      </div>
     </div>
 
     <!-- Panel de botones -->
@@ -114,7 +147,7 @@
         <!-- PLAYER VS CPU -->
         <button id="btn-pvc" class="menu-btn menu-btn--disabled"
                 disabled title="Próximamente">
-          <span class="menu-btn__icon"><i class="fa-solid fa-user-vs"></i></span>
+          <span class="menu-btn__icon"><i class="fa-solid fa-user-ninja"></i></span>
           <span class="menu-btn__label">Player vs CPU</span>
           <span class="menu-btn__badge">Próximamente</span>
         </button>
@@ -138,6 +171,11 @@
       </nav>
     </div>
 
+    <!-- Botón de Garaje (Esquina Inferior Izquierda) -->
+    <button id="btn-open-garage" class="garage-toggle" 
+            onclick="abrirModalVehiculo()" title="Abrir Garaje">
+      <i class="fa-solid fa-car-side"></i>
+    </button>
   </main>
 
   <div class="version-tag">v0.1.0-alpha</div>

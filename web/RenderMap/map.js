@@ -478,10 +478,47 @@ function buildCity(matrix) {
   }
 
   // ── Carro Fijo del Jugador (Independiente) ──
-  const playerCar = carMesh(0, 0, 1);
-  playerCar.position.set(startX, 0, startZ);
-  playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  scene.add(playerCar);
+  let playerCar;
+  
+  async function setupPlayerVehicle() {
+    let vehType = "carro";
+    try {
+      if (typeof eel !== 'undefined') vehType = await eel.obtener_vehiculo()();
+    } catch(e) {}
+    
+    if (vehType === "moto") {
+        playerCar = new THREE.Group();
+        const body = m(new THREE.BoxGeometry(.45*.8, .15*.8, .12*.8), new THREE.MeshLambertMaterial({color: CAR_PALETTE[1]}));
+        body.position.y = .15;
+        const seat = m(new THREE.BoxGeometry(.25*.8, .05*.8, .1*.8), new THREE.MeshLambertMaterial({color: 0x222222}));
+        seat.position.set(-.05, .22, 0);
+        [[-.18, 0], [.18, 0]].forEach(([wx, wz]) => {
+           const w = m(new THREE.CylinderGeometry(.08*.8,.08*.8,.05*.8,8), new THREE.MeshLambertMaterial({color:0x111111}));
+           w.rotation.z=Math.PI/2; w.position.set(wx, .08, wz); playerCar.add(w);
+        });
+        playerCar.add(body); playerCar.add(seat);
+    } else if (vehType === "helicoptero") {
+        playerCar = new THREE.Group();
+        const body = m(new THREE.SphereGeometry(.25, 8, 8), new THREE.MeshLambertMaterial({color: CAR_PALETTE[1]}));
+        body.scale.set(1.4, 1, 1); body.position.y = .35;
+        const tail = m(new THREE.BoxGeometry(.4, .08, .08), new THREE.MeshLambertMaterial({color: CAR_PALETTE[1]}));
+        tail.position.set(-.35, .35, 0);
+        const rotorAxis = m(new THREE.CylinderGeometry(.02, .02, .15, 8), new THREE.MeshLambertMaterial({color: 0x333333}));
+        rotorAxis.position.y = .55;
+        const blades = m(new THREE.BoxGeometry(.8, .01, .08), new THREE.MeshLambertMaterial({color: 0x222222}));
+        blades.position.y = .63;
+        playerCar.add(body); playerCar.add(tail); playerCar.add(rotorAxis); playerCar.add(blades);
+        playerCar.userData.blades = blades;
+    } else {
+        playerCar = carMesh(0, 0, 1);
+    }
+    
+    playerCar.position.set(startX, 0, startZ);
+    playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(playerCar);
+  }
+  
+  setupPlayerVehicle();
 
   // Variables de movimiento fluido
   let currentPath = [];
@@ -680,6 +717,11 @@ function buildCity(matrix) {
   // ── Animation loop ──
   (function loop() {
     requestAnimationFrame(loop);
+    
+    // Rotor animation
+    if (playerCar && playerCar.userData.blades) {
+        playerCar.userData.blades.rotation.y += 0.3;
+    }
 
     // Sistema de movimiento a pasos pequeños, de mitad en mitad
     if (isMoving && !isPaused && currentPath && pathIndex < currentPath.length - 1) {
