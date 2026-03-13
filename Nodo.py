@@ -2,25 +2,15 @@ from Formulacion import *
 
 class Nodo:
     
-    def __init__(self, Status, Path, Route, People):
+    def __init__(self, Status, Path, Route, People,Cost):
         self.Status = Status
         self.Path = Path
         self.Route = Route
         self.People = People
+        self.Cost = Cost
         
 
     def expandir_amplitud(self,map):
-        
-        def create_children(statusChildren,nodosHijos,posX,posY,people):
-            newNPerson = statusChildren.nPeoples + add_person(map,posX,posY,people)
-            if newNPerson != statusChildren.nPeoples:
-                statusChildren.nPeoples = newNPerson
-                nodoHijo = Nodo(statusChildren,self.Path + [statusChildren.get_values()],self.Route | {statusChildren.get_values()},people | {(posX,posY)})
-                nodosHijos.append(nodoHijo)
-            else:
-                nodoHijo = Nodo(statusChildren,self.Path + [statusChildren.get_values()],self.Route | {statusChildren.get_values()},people)
-                nodosHijos.append(nodoHijo)
-            
         
         posX , posY, nPeople = self.Status.get_values()
         
@@ -34,11 +24,18 @@ class Nodo:
         ]
         
         for is_locked_func, dx, dy in directions:
-            new_posX, new_posY = posX + dx, posY + dy
             if not(is_locked_func(map, posX, posY)):
-                statusHijo = Status(new_posX, new_posY, nPeople)
+                new_posX, new_posY = posX + dx, posY + dy
+                new_nPeople = nPeople + add_person(map, new_posX, new_posY, self.People)
+                statusHijo = Status(new_posX, new_posY, new_nPeople)
                 if not(is_cycle(statusHijo.get_values(), self.Route)):
-                    create_children(statusHijo, nodosHijos, new_posX, new_posY, self.People)
+                    if new_nPeople > nPeople:
+                        people = self.People | {(new_posX, new_posY)}
+                    else:
+                        people = self.People
+                    new_cost = self.Cost + add_cost(map,new_posX,new_posY)
+                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people,new_cost)
+                    nodosHijos.append(nodoHijo)
         
         return nodosHijos
         

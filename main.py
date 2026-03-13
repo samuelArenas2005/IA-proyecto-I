@@ -6,7 +6,7 @@ from busquedaAmplitud import limpiar_route
 eel.init('web')  # Carpeta donde está el frontend
 
 # ─── Mapa de la ciudad 10×10 ──────────────────────────────────────────────────
-# 0=calle  1=edificio/parque  2=inicio carro  3=calle+carros  4=calle+persona  5=calle+meta
+# 0=calle  1=edificio/parque  2=inicio carro  3=calle+semaforo 4=calle+persona  5=calle+meta
 MATRIZ_DEFECTO = [
     [4, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [0, 1, 1, 0, 0, 0, 3, 0, 0, 0],
@@ -49,10 +49,10 @@ def _cargar_matriz_desde_texto(ruta):
 
 def _inicializar_matriz():
     """Carga matriz desde mapas/pruebas/mapa1.txt o usa la por defecto."""
-    ruta = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas', 'mapa1.txt')
+    ruta = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas', 'mapa2.txt')
     matriz = _cargar_matriz_desde_texto(ruta)
     if matriz:
-        print("[mapa] Cargado desde mapas/pruebas/mapa1.txt")
+        print("[mapa] Cargado desde mapas/pruebas/mapa2.txt")
         return matriz
     print("[mapa] Usando matriz por defecto (mapas/pruebas/mapa1.txt no encontrado o inválido)")
     return [fila[:] for fila in MATRIZ_DEFECTO]

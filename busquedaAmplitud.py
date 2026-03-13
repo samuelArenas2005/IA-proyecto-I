@@ -1,6 +1,5 @@
 from Nodo import Nodo
 from Formulacion import *
-import copy
 from collections import deque
 
 def get_ubication_start(map):
@@ -21,7 +20,7 @@ def number_peoples(map):
 def get_nodo_raiz(map):
     startX, startY = get_ubication_start(map)
     statusNodoRaiz = Status(startX,startY,0)
-    nodoRaiz = Nodo(statusNodoRaiz,[statusNodoRaiz.get_values()],{statusNodoRaiz.get_values()},set())
+    nodoRaiz = Nodo(statusNodoRaiz,[statusNodoRaiz.get_values()],{statusNodoRaiz.get_values()},set(),0)
     
     return nodoRaiz
 
@@ -60,7 +59,8 @@ CITY_MATRIX = [
 
 nodoMeta = busqueda_amplitud(CITY_MATRIX)
 
-print(nodoMeta.Path) 
+print(nodoMeta.Path)
+print(nodoMeta.Cost) 
 
 def limpiar_route(map):
     nodoMeta = busqueda_amplitud(map)

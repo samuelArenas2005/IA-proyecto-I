@@ -60,6 +60,11 @@ def add_person(map,posX,posY,people):
         return 1
     
     return 0 
+
+def add_cost(map,posX,posY):
+    if map[posX][posY] == 3:
+        return 7
+    return 1
   
 
     
