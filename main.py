@@ -1,3 +1,4 @@
+import os
 import eel
 from busquedaAmplitud import limpiar_route
 
@@ -6,7 +7,7 @@ eel.init('web')  # Carpeta donde está el frontend
 
 # ─── Mapa de la ciudad 10×10 ──────────────────────────────────────────────────
 # 0=calle  1=edificio/parque  2=inicio carro  3=calle+carros  4=calle+persona  5=calle+meta
-CITY_MATRIX = [
+MATRIZ_DEFECTO = [
     [4, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [0, 1, 1, 0, 0, 0, 3, 0, 0, 0],
     [2, 1, 1, 0, 1, 0, 1, 0, 1, 0],
@@ -18,6 +19,58 @@ CITY_MATRIX = [
     [0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
 ]
+
+def _cargar_matriz_desde_texto(ruta):
+    """
+    Carga la matriz desde un archivo de texto plano.
+    Formato: cada línea es una fila, números separados por espacios.
+    Ejemplo:
+        4 1 1 1 1 1 1 1 1 1
+        0 1 1 0 0 0 3 0 0 0
+        ...
+    Retorna None si falla.
+    """
+    try:
+        if not os.path.isfile(ruta):
+            return None
+        with open(ruta, 'r', encoding='utf-8') as f:
+            matriz = []
+            for linea in f:
+                linea = linea.strip()
+                if not linea:
+                    continue
+                fila = [int(x) for x in linea.split()]
+                matriz.append(fila)
+            if matriz and len(matriz) == 10 and all(len(fila) == 10 for fila in matriz):
+                return matriz
+    except (ValueError, OSError) as e:
+        print(f"[mapa] Error al leer {ruta}: {e}")
+    return None
+
+def _inicializar_matriz():
+    """Carga matriz desde mapas/pruebas/mapa1.txt o usa la por defecto."""
+    ruta = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas', 'mapa1.txt')
+    matriz = _cargar_matriz_desde_texto(ruta)
+    if matriz:
+        print("[mapa] Cargado desde mapas/pruebas/mapa1.txt")
+        return matriz
+    print("[mapa] Usando matriz por defecto (mapas/pruebas/mapa1.txt no encontrado o inválido)")
+    return [fila[:] for fila in MATRIZ_DEFECTO]
+
+CITY_MATRIX = _inicializar_matriz()
+
+@eel.expose
+def cargar_mapa_desde_archivo(ruta):
+    """Carga una nueva matriz desde un archivo de texto. Retorna {ok: bool, error?: str}."""
+    global CITY_MATRIX, PATH_EXAMPLE
+    if not os.path.isabs(ruta):
+        ruta = os.path.join(os.path.dirname(__file__), ruta)
+    matriz = _cargar_matriz_desde_texto(ruta)
+    if matriz is None:
+        return {"ok": False, "error": f"No se pudo cargar el archivo: {ruta}"}
+    CITY_MATRIX = matriz
+    PATH_EXAMPLE = limpiar_route(CITY_MATRIX)
+    return {"ok": True}
 
 @eel.expose
 def obtener_matriz_ciudad():
