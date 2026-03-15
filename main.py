@@ -3,9 +3,13 @@ import eel
 from Utilidades import limpiar_route, inicializar_matriz, cargar_matriz_desde_texto
 from busquedaAmplitud import busqueda_amplitud
 from busquedaCostoUniforme import busqueda_costo_uniforme
+from busquedaProfundidad import busqueda_profundidad
 
 ALGORITMO_SELECCIONADO = ""
 VEHICULO_SELECCIONADO = "carro"
+
+# Orden por defecto de operadores para búsqueda en profundidad
+ORDEN_OPERADORES_PROFUNDIDAD = ['izquierda', 'abajo', 'derecha', 'arriba']
 
 # ─── Configuración de Eel ──────────────────────────────────────────────────────
 eel.init('web')  # Carpeta donde está el frontend
@@ -49,13 +53,29 @@ def obtener_vehiculo():
     return VEHICULO_SELECCIONADO
 
 @eel.expose
+def establecer_orden_operadores(orden):
+    """Establece el orden de operadores para búsqueda en profundidad."""
+    global ORDEN_OPERADORES_PROFUNDIDAD
+    if isinstance(orden, list) and len(orden) == 4:
+        ORDEN_OPERADORES_PROFUNDIDAD = orden
+        print(f"[backend] Orden de operadores actualizado: {orden}")
+        return {"ok": True}
+    return {"ok": False, "error": "Orden inválido"}
+
+@eel.expose
+def obtener_orden_operadores():
+    """Retorna el orden actual de operadores."""
+    return ORDEN_OPERADORES_PROFUNDIDAD
+
+@eel.expose
 def obtener_ruta():
     """Calcula y retorna la ruta usando el algoritmo seleccionado."""
-    global ALGORITMO_SELECCIONADO
+    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD
     
     algoritmos = {
         "amplitud": busqueda_amplitud,
-        "costo_uniforme": busqueda_costo_uniforme
+        "costo_uniforme": busqueda_costo_uniforme,
+        "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD)
     }
     
     func = algoritmos.get(ALGORITMO_SELECCIONADO)

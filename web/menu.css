@@ -245,3 +245,62 @@ html, body {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* ── Lista de Operadores (Drag & Drop) ── */
+.operadores-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.operador-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: move;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.operador-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(4px);
+}
+
+.operador-item.dragging {
+  opacity: 0.5;
+}
+
+.operador-icon {
+  font-size: 18px;
+  color: var(--accent, #7c6fff);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.operador-nombre {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.operador-grip {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: grab;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.operador-grip:active {
+  cursor: grabbing;
+}
+
+.operador-item:hover .operador-grip {
+  color: rgba(255, 255, 255, 0.5);
+}

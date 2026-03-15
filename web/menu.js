@@ -441,3 +441,188 @@ window.irAlCrearMapa = function() {
   }
   requestAnimationFrame(animateZoom);
 };
+
+// ── Configuración de Profundidad ────────────────────────────────────────────────
+let ordenOperadoresActual = ['izquierda', 'abajo', 'derecha', 'arriba'];
+let elementoArrastrado = null;
+
+// Iconos para cada operador
+const iconosOperadores = {
+  'izquierda': 'fa-arrow-left',
+  'abajo': 'fa-arrow-down',
+  'derecha': 'fa-arrow-right',
+  'arriba': 'fa-arrow-up'
+};
+
+// Nombres en español
+const nombresOperadores = {
+  'izquierda': 'Izquierda',
+  'abajo': 'Abajo',
+  'derecha': 'Derecha',
+  'arriba': 'Arriba'
+};
+
+window.abrirConfiguracionProfundidad = async function() {
+  // Cargar orden actual desde Python
+  try {
+    if (typeof eel !== 'undefined' && eel.obtener_orden_operadores) {
+      ordenOperadoresActual = await eel.obtener_orden_operadores()();
+    }
+  } catch (e) {
+    console.warn('No se pudo cargar orden actual:', e);
+  }
+  
+  // Mostrar modal
+  const modal = document.getElementById('profundidad-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+  
+  // Renderizar lista ordenable
+  renderizarListaOperadores();
+};
+
+function renderizarListaOperadores() {
+  const lista = document.getElementById('lista-operadores');
+  lista.innerHTML = '';
+  
+  ordenOperadoresActual.forEach((op, index) => {
+    const item = document.createElement('div');
+    item.className = 'operador-item';
+    item.draggable = true;
+    item.dataset.index = index;
+    item.dataset.operador = op;
+    
+    item.innerHTML = `
+      <div class="operador-content">
+        <div class="operador-icon-wrapper">
+          <i class="fa-solid ${iconosOperadores[op]}"></i>
+        </div>
+        <span class="operador-nombre">${nombresOperadores[op]}</span>
+      </div>
+      <div class="operador-grip">
+        <i class="fa-solid fa-grip-vertical"></i>
+        <i class="fa-solid fa-grip-vertical"></i>
+      </div>
+    `;
+    
+    // Eventos de drag & drop
+    item.addEventListener('dragstart', handleDragStart);
+    item.addEventListener('dragover', handleDragOver);
+    item.addEventListener('drop', handleDrop);
+    item.addEventListener('dragend', handleDragEnd);
+    item.addEventListener('dragenter', handleDragEnter);
+    item.addEventListener('dragleave', handleDragLeave);
+    
+    lista.appendChild(item);
+  });
+}
+
+function handleDragStart(e) {
+  elementoArrastrado = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);
+  
+  // Agregar efecto visual al elemento que se arrastra
+  setTimeout(() => {
+    this.style.opacity = '0.4';
+  }, 0);
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  
+  e.dataTransfer.dropEffect = 'move';
+  
+  // Agregar indicador visual de dónde se soltará
+  if (elementoArrastrado && elementoArrastrado !== this) {
+    const rect = this.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+    
+    // Determinar si se inserta arriba o abajo
+    if (y < height / 2) {
+      this.classList.add('drop-above');
+      this.classList.remove('drop-below');
+    } else {
+      this.classList.add('drop-below');
+      this.classList.remove('drop-above');
+    }
+  }
+  
+  return false;
+}
+
+function handleDragEnter(e) {
+  if (elementoArrastrado && elementoArrastrado !== this) {
+    this.classList.add('drag-over');
+  }
+}
+
+function handleDragLeave(e) {
+  this.classList.remove('drag-over', 'drop-above', 'drop-below');
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  this.classList.remove('drag-over', 'drop-above', 'drop-below');
+  
+  if (elementoArrastrado !== this) {
+    const indiceOrigen = parseInt(elementoArrastrado.dataset.index);
+    const indiceDestino = parseInt(this.dataset.index);
+    
+    // Reordenar array
+    const [removido] = ordenOperadoresActual.splice(indiceOrigen, 1);
+    ordenOperadoresActual.splice(indiceDestino, 0, removido);
+    
+    // Re-renderizar con animación
+    renderizarListaOperadores();
+  }
+  
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.classList.remove('dragging');
+  this.style.opacity = '1';
+  
+  // Limpiar todas las clases de drag-over en todos los elementos
+  document.querySelectorAll('.operador-item').forEach(item => {
+    item.classList.remove('drag-over', 'drop-above', 'drop-below');
+  });
+  
+  elementoArrastrado = null;
+}
+
+window.aplicarOrdenProfundidad = async function() {
+  try {
+    if (typeof eel !== 'undefined' && eel.establecer_orden_operadores) {
+      const resultado = await eel.establecer_orden_operadores(ordenOperadoresActual)();
+      if (resultado.ok) {
+        // Seleccionar algoritmo de profundidad
+        if (eel.seleccionar_algoritmo) {
+          await eel.seleccionar_algoritmo('profundidad')();
+        }
+        cerrarModalProfundidad();
+        // Continuar con la navegación normal
+        seleccionarAlgoritmo('profundidad');
+      } else {
+        alert('Error al establecer orden: ' + (resultado.error || 'desconocido'));
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al aplicar orden');
+  }
+};
+
+window.cerrarModalProfundidad = function() {
+  const modal = document.getElementById('profundidad-modal');
+  modal.style.opacity = '0';
+  setTimeout(() => modal.style.display = 'none', 400);
+};

@@ -57,10 +57,10 @@
         </button>
 
         <!-- PROFUNDIDAD -->
-        <button class="menu-btn menu-btn--disabled" disabled title="Próximamente">
+        <button id="btn-profundidad" class="menu-btn menu-btn--active"
+                onclick="abrirConfiguracionProfundidad()" title="Búsqueda en Profundidad">
           <span class="menu-btn__icon"><i class="fa-solid fa-layer-group"></i></span>
           <span class="menu-btn__label">Profundidad</span>
-          <span class="menu-btn__badge">Próximamente</span>
         </button>
 
         <!-- AVARA -->
@@ -123,6 +123,39 @@
             <span class="menu-btn__label">Listo</span>
           </button>
         </nav>
+      </div>
+    </div>
+
+    <!-- Modal de configuración de profundidad -->
+    <div id="profundidad-modal" class="modal-overlay" style="display: none; opacity: 0;">
+      <div class="menu-panel menu-panel--modal" style="max-width: 580px; min-width: 520px;">
+        <div class="brand-tag">CONFIGURACIÓN</div>
+        <h1 class="brand-title">Orden de<br>Operadores</h1>
+        <p class="brand-sub">Arrastra para reordenar. El de arriba se expande primero</p>
+        
+        <div class="menu-sep"></div>
+        
+        <!-- Lista ordenable de operadores -->
+        <div id="lista-operadores" class="operadores-lista">
+          <!-- Se llenará dinámicamente -->
+        </div>
+        
+        <div class="menu-sep" style="margin: 20px 0;"></div>
+        
+        <div style="display: flex; gap: 10px;">
+          <button class="menu-btn menu-btn--active" 
+                  onclick="aplicarOrdenProfundidad()" 
+                  style="flex: 1; background: var(--accent);">
+            <span class="menu-btn__icon"><i class="fa-solid fa-check"></i></span>
+            <span class="menu-btn__label">Aplicar</span>
+          </button>
+          <button class="menu-btn" 
+                  onclick="cerrarModalProfundidad()" 
+                  style="flex: 1;">
+            <span class="menu-btn__icon"><i class="fa-solid fa-times"></i></span>
+            <span class="menu-btn__label">Cancelar</span>
+          </button>
+        </div>
       </div>
     </div>
 
