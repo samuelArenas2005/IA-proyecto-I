@@ -280,6 +280,11 @@ body.light .btn-theme {
   transition: all .3s;
 }
 
+.map-btn--tree:hover {
+  border-color: #ffd43b;
+  box-shadow: 0 0 10px rgba(255, 212, 59, .35);
+}
+
 .map-btn--speed:hover {
   border-color: #4c7cfa;
   box-shadow: 0 0 10px rgba(76, 124, 250, .35);
@@ -370,4 +375,56 @@ body.fade-out {
 @keyframes pageFadeOut {
   from { opacity: 1; }
   to   { opacity: 0; }
+}
+
+.tree-sketch-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 80px;
+  z-index: 140;
+  width: 380px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+
+.tree-sketch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .8rem;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.tree-sketch-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+#tree-sketch-canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(13, 16, 32, .8);
+}
+
+.tree-sketch-replay {
+  margin-top: 8px;
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
 }

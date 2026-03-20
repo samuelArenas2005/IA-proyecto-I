@@ -10,6 +10,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const TILE   = 2;
 const GRID   = 10;
 const OFFSET = (GRID * TILE) / 2;
+window.__lastSearchTree = [];
+window.__lastRoute = [];
 
 // ── Paletas ───────────────────────────────────────────────────────────────────
 const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
@@ -527,6 +529,7 @@ function buildCity(matrix) {
   let isMoving = false;
   let isPaused = false;
   let speedMultiplier = 1.0; // Por defecto x1
+  let treeAnimFrame = null;
 
   function checkAndAnimatePerson(row, col) {
       if (matrix[row] && matrix[row][col] === 4) {
@@ -624,6 +627,141 @@ function buildCity(matrix) {
     checkAndAnimatePerson(r0, c0);
     checkAndAnimateTraffic(r0, c0);
   };
+
+  // ── Boceto superior del árbol de búsqueda ───────────────────────────────────
+  function drawSketchBase(ctx, canvas, gridSize, mapMatrix) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const pad = 18;
+    const cell = Math.floor((Math.min(w, h) - pad * 2) / gridSize);
+    const ox = Math.floor((w - cell * gridSize) / 2);
+    const oy = Math.floor((h - cell * gridSize) / 2);
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#101528';
+    ctx.fillRect(0, 0, w, h);
+
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const v = mapMatrix[r][c];
+        let color = '#2b324d'; // libre
+        if (v === 1) color = '#5b637f';      // muro
+        else if (v === 3) color = '#5b3b55'; // tráfico alto
+        else if (v === 4) color = '#2e5b7e'; // persona
+        else if (v === 5) color = '#6d3c3c'; // meta
+        else if (v === 2) color = '#35674a'; // inicio
+
+        ctx.fillStyle = color;
+        ctx.fillRect(ox + c * cell, oy + r * cell, cell - 1, cell - 1);
+      }
+    }
+    return { cell, ox, oy };
+  }
+
+  function drawSearchTreeAtStep(stepCount) {
+    const panel = document.getElementById('tree-sketch-panel');
+    const canvas = document.getElementById('tree-sketch-canvas');
+    if (!panel || panel.style.display === 'none' || !canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const base = drawSketchBase(ctx, canvas, GRID, matrix);
+    if (!window.__lastSearchTree || window.__lastSearchTree.length === 0) return;
+
+    const capped = Math.max(1, Math.min(stepCount, window.__lastSearchTree.length));
+    ctx.strokeStyle = '#ffd43b';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = '#ffd43b';
+    ctx.shadowBlur = 8;
+
+    for (let i = 0; i < capped; i++) {
+      const edge = window.__lastSearchTree[i];
+      if (!edge || edge.length < 4) continue;
+      const pr = edge[0], pc = edge[1], cr = edge[2], cc = edge[3];
+      const x1 = base.ox + pc * base.cell + base.cell / 2;
+      const y1 = base.oy + pr * base.cell + base.cell / 2;
+      const x2 = base.ox + cc * base.cell + base.cell / 2;
+      const y2 = base.oy + cr * base.cell + base.cell / 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    const current = window.__lastSearchTree[capped - 1];
+    if (current && current.length >= 4) {
+      const cx = base.ox + current[3] * base.cell + base.cell / 2;
+      const cy = base.oy + current[2] * base.cell + base.cell / 2;
+      ctx.fillStyle = '#ffe066';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Cuando termina de dibujarse el árbol, resaltar el camino solución.
+    if (capped >= window.__lastSearchTree.length && window.__lastRoute && window.__lastRoute.length > 1) {
+      ctx.strokeStyle = '#00e5a0';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#00e5a0';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      for (let i = 0; i < window.__lastRoute.length; i++) {
+        const step = window.__lastRoute[i];
+        const row = step[0];
+        const col = step[1];
+        const x = base.ox + col * base.cell + base.cell / 2;
+        const y = base.oy + row * base.cell + base.cell / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function animateSearchTreeSketch() {
+    if (treeAnimFrame) cancelAnimationFrame(treeAnimFrame);
+    if (!window.__lastSearchTree || window.__lastSearchTree.length === 0) {
+      window.mostrar_notificacion?.('No hay árbol de búsqueda disponible aún.');
+      return;
+    }
+    let step = 1;
+    let lastTick = 0;
+    const speedMs = 70;
+
+    const loopSketch = (ts) => {
+      if (!lastTick) lastTick = ts;
+      if (ts - lastTick >= speedMs) {
+        step++;
+        lastTick = ts;
+      }
+      drawSearchTreeAtStep(step);
+      if (step < window.__lastSearchTree.length) {
+        treeAnimFrame = requestAnimationFrame(loopSketch);
+      }
+    };
+
+    drawSearchTreeAtStep(1);
+    treeAnimFrame = requestAnimationFrame(loopSketch);
+  }
+
+  function openSearchTreePanel() {
+    const panel = document.getElementById('tree-sketch-panel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    drawSearchTreeAtStep(1);
+    animateSearchTreeSketch();
+  }
+
+  document.getElementById('btn-show-tree')?.addEventListener('click', openSearchTreePanel);
+  document.getElementById('btn-close-tree-panel')?.addEventListener('click', () => {
+    const panel = document.getElementById('tree-sketch-panel');
+    if (panel) panel.style.display = 'none';
+    if (treeAnimFrame) cancelAnimationFrame(treeAnimFrame);
+  });
+  document.getElementById('btn-replay-tree')?.addEventListener('click', animateSearchTreeSketch);
 
 
   // ── Recopilar materiales emissive (ventanas + meta) para actualizarlos con la hora ──
@@ -958,6 +1096,15 @@ setTimeout(() => {
       try {
         if (window.eel && window.eel.obtener_ruta) {
           const ruta = await window.eel.obtener_ruta()();
+          window.__lastRoute = Array.isArray(ruta) ? ruta : [];
+          if (window.eel.obtener_search_tree) {
+            try {
+              window.__lastSearchTree = await window.eel.obtener_search_tree()();
+            } catch (treeErr) {
+              console.warn('No se pudo obtener search_tree', treeErr);
+              window.__lastSearchTree = [];
+            }
+          }
           if (window.startCarMovement) {
             window.startCarMovement(ruta);
           }

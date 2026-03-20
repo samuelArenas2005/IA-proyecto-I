@@ -1,6 +1,6 @@
 import os
 import eel
-from Utilidades import limpiar_route, inicializar_matriz, cargar_matriz_desde_texto
+from Utilidades import limpiar_route_y_search_tree, inicializar_matriz, cargar_matriz_desde_texto
 from busquedaAmplitud import busqueda_amplitud
 from busquedaCostoUniforme import busqueda_costo_uniforme
 from busquedaProfundidad import busqueda_profundidad
@@ -16,6 +16,7 @@ ORDEN_OPERADORES_PROFUNDIDAD = ['izquierda', 'abajo', 'derecha', 'arriba']
 eel.init('web')  # Carpeta donde está el frontend
 
 CITY_MATRIX = inicializar_matriz()
+LAST_SEARCH_TREE = []
 
 @eel.expose
 def cargar_mapa_desde_archivo(ruta):
@@ -69,9 +70,14 @@ def obtener_orden_operadores():
     return ORDEN_OPERADORES_PROFUNDIDAD
 
 @eel.expose
+def obtener_search_tree():
+    """Retorna el árbol de expansión de la última búsqueda ejecutada."""
+    return LAST_SEARCH_TREE
+
+@eel.expose
 def obtener_ruta():
     """Calcula y retorna la ruta usando el algoritmo seleccionado."""
-    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD
+    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE
     
     algoritmos = {
         "amplitud": busqueda_amplitud,
@@ -85,7 +91,8 @@ def obtener_ruta():
         print(f"[IA] Advertencia: Algoritmo '{ALGORITMO_SELECCIONADO}' no reconocido o no seleccionado.")
         return []
         
-    ruta = limpiar_route(func, CITY_MATRIX)
+    ruta, search_tree = limpiar_route_y_search_tree(func, CITY_MATRIX)
+    LAST_SEARCH_TREE = search_tree
     return ruta
 
 

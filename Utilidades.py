@@ -74,14 +74,25 @@ def get_nodo_raiz(city_map):
         return nodoRaiz
     return None
 
-def limpiar_route(busqueda_func, city_map):
-    nodoMeta = busqueda_func(city_map)
+def limpiar_route_y_search_tree(busqueda_func, city_map):
+    resultado = busqueda_func(city_map)
+
+    if isinstance(resultado, tuple) and len(resultado) == 2:
+        nodoMeta, search_tree = resultado
+    else:
+        nodoMeta, search_tree = resultado, []
+
     if not nodoMeta:
-        return []
-        
+        return [], search_tree
+
     ruta = nodoMeta.Path
     rutaLimpia = []
     for elem in ruta:
         rutaLimpia.append((elem[0], elem[1]))
-        
-    return rutaLimpia
+
+    return rutaLimpia, search_tree
+
+
+def limpiar_route(busqueda_func, city_map):
+    ruta, _ = limpiar_route_y_search_tree(busqueda_func, city_map)
+    return ruta
