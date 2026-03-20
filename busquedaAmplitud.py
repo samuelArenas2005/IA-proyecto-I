@@ -7,7 +7,7 @@ def busqueda_amplitud(city_map):
 
     cola = deque()
     cola.append(get_nodo_raiz(city_map))
-    nPeople = number_peoples(city_map)
+    nPeople, _ = number_peoples(city_map)
     
     while True:
         if len(cola) == 0:

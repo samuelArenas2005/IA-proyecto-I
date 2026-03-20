@@ -5,7 +5,7 @@ from Utilidades import number_peoples, get_nodo_raiz
 def busqueda_profundidad(city_map, orden_operadores):
     pila = []
     pila.append(get_nodo_raiz(city_map))
-    nPeople = number_peoples(city_map)
+    nPeople, _ = number_peoples(city_map)
     
     while True:
         if len(pila) == 0:

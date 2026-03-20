@@ -65,6 +65,6 @@ def add_cost(city_map,posX,posY):
     if city_map[posX][posY] == 3:
         return 7
     return 1
-  
+
 
     

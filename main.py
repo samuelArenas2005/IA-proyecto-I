@@ -4,6 +4,7 @@ from Utilidades import limpiar_route, inicializar_matriz, cargar_matriz_desde_te
 from busquedaAmplitud import busqueda_amplitud
 from busquedaCostoUniforme import busqueda_costo_uniforme
 from busquedaProfundidad import busqueda_profundidad
+from busquedaAvara import busqueda_avara
 
 ALGORITMO_SELECCIONADO = ""
 VEHICULO_SELECCIONADO = "carro"
@@ -75,7 +76,8 @@ def obtener_ruta():
     algoritmos = {
         "amplitud": busqueda_amplitud,
         "costo_uniforme": busqueda_costo_uniforme,
-        "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD)
+        "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD),
+        "avara": busqueda_avara,
     }
     
     func = algoritmos.get(ALGORITMO_SELECCIONADO)

@@ -47,20 +47,30 @@ def get_ubication_start(city_map):
                 return (i, j)
     return None
 
+def get_ubication_end(city_map):
+    for i in range(len(city_map)):
+        for j in range(len(city_map[0])):
+            if city_map[i][j] == 5:
+                return (i, j)
+    return None
+
+
 def number_peoples(city_map):
+    people_position = set()
     nPeople = 0
     for i in range(len(city_map)):
         for j in range(len(city_map[0])):
             if city_map[i][j] == 4:
+                people_position.add((i, j))
                 nPeople += 1
-    return nPeople
+    return nPeople, people_position
 
 def get_nodo_raiz(city_map):
     res = get_ubication_start(city_map)
     if res:
         startX, startY = res
         statusNodoRaiz = Status(startX, startY, 0)
-        nodoRaiz = Nodo(statusNodoRaiz, [statusNodoRaiz.get_values()], {statusNodoRaiz.get_values()}, set(), 0)
+        nodoRaiz = Nodo(statusNodoRaiz, [statusNodoRaiz.get_values()], {statusNodoRaiz.get_values()}, set(), 0, None)
         return nodoRaiz
     return None
 

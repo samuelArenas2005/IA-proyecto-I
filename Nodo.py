@@ -2,12 +2,13 @@ from Formulacion import *
 
 class Nodo:
     
-    def __init__(self, Status, Path, Route, People,Cost):
+    def __init__(self, Status, Path, Route, People,Cost, Heuristic=None):
         self.Status = Status
         self.Path = Path
         self.Route = Route
         self.People = People
         self.Cost = Cost
+        self.Heuristic = Heuristic
         
 
     def expandir_no_informada(self,city_map):
@@ -91,3 +92,55 @@ class Nodo:
         
         return nodosHijos
         
+
+
+    def expandir_informada(self,city_map, people_position, end_position):
+        
+        posX , posY, nPeople = self.Status.get_values()
+        
+        nodosHijos = []
+        
+        directions = [
+            (is_locked_up, -1, 0),
+            (is_locked_down, 1, 0),
+            (is_locked_right, 0, 1),
+            (is_locked_left, 0, -1),
+        ]
+        
+        for is_locked_func, dx, dy in directions:
+            if not(is_locked_func(city_map, posX, posY)):
+                new_posX, new_posY = posX + dx, posY + dy
+                new_nPeople = nPeople + add_person(city_map, new_posX, new_posY, self.People)
+                statusHijo = Status(new_posX, new_posY, new_nPeople)
+                if not(is_cycle(statusHijo.get_values(), self.Route)):
+                    if new_nPeople > nPeople:
+                        people = self.People | {(new_posX, new_posY)}
+                    else:
+                        people = self.People
+                    new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
+
+                    people_left_hijo  =  {p for p in people_position if p not in people}
+                    heuristic = Nodo.calculate_heuristic(people_left_hijo , (new_posX, new_posY), end_position)
+
+                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people,new_cost, heuristic)
+                    nodosHijos.append(nodoHijo)
+        
+        return nodosHijos
+
+    @staticmethod
+    def calculate_heuristic(people_position, actual_position, end_position):
+        heuristic = 0
+        heuristic_position = actual_position
+        pendientes = set(people_position)
+
+        while pendientes:
+            cercano = min(
+                pendientes,
+                key=lambda p: abs(p[0] - heuristic_position[0]) + abs(p[1] - heuristic_position[1])
+            )
+            heuristic += abs(cercano[0] - heuristic_position[0]) + abs(cercano[1] - heuristic_position[1])
+            heuristic_position = cercano
+            pendientes.remove(cercano)
+
+        heuristic += abs(end_position[0] - heuristic_position[0]) + abs(end_position[1] - heuristic_position[1])
+        return heuristic   
