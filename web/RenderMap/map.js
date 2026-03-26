@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /* ══════════════════════════════════════════════════════════════
    map.js – Ciudad isométrica 10×10  (Three.js)
@@ -481,6 +482,7 @@ function buildCity(matrix) {
 
   // ── Carro Fijo del Jugador (Independiente) ──
   let playerCar;
+  const gltfLoader = new GLTFLoader();
   
   async function setupPlayerVehicle() {
     let vehType = "carro";
@@ -488,7 +490,27 @@ function buildCity(matrix) {
       if (typeof eel !== 'undefined') vehType = await eel.obtener_vehiculo()();
     } catch(e) {}
     
-    if (vehType === "moto") {
+    if (vehType.toLowerCase().endsWith('.glb')) {
+        playerCar = new THREE.Group();
+        const url = `../SelectVehicle/assets/${vehType}`;
+        gltfLoader.load(url, (gltf) => {
+            const model = gltf.scene;
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 1.6 / maxDim; // El tile es 2, esto ocupa buen espacio
+            model.scale.setScalar(scale);
+            // Centrado usando el mesh dummy container
+            model.position.sub(center.multiplyScalar(scale));
+            model.position.y += 0.45; // flotar un poco
+            model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+            playerCar.add(model);
+        }, undefined, (err) => {
+            console.error("Error loading GLB in RenderMap:", err);
+            playerCar.add(carMesh(0, 0, 1)); // Fallback
+        });
+    } else if (vehType === "moto") {
         playerCar = new THREE.Group();
         const body = m(new THREE.BoxGeometry(.45*.8, .15*.8, .12*.8), new THREE.MeshLambertMaterial({color: CAR_PALETTE[1]}));
         body.position.y = .15;
@@ -516,7 +538,9 @@ function buildCity(matrix) {
     }
     
     playerCar.position.set(startX, 0, startZ);
-    playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    if (!vehType.toLowerCase().endsWith('.glb')) {
+        playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    }
     scene.add(playerCar);
   }
   

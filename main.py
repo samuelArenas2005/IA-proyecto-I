@@ -75,6 +75,30 @@ def obtener_lista_mapas():
     return sorted(archivos)
 
 @eel.expose
+def obtener_lista_glb():
+    """Retorna la lista de archivos .glb en SelectVehicle/assets."""
+    ruta = os.path.join(os.path.dirname(__file__), 'web', 'SelectVehicle', 'assets')
+    os.makedirs(ruta, exist_ok=True)
+    archivos = [f for f in os.listdir(ruta) if f.lower().endswith('.glb')]
+    return sorted(archivos)
+
+@eel.expose
+def guardar_glb_vehiculo(nombre, datos_b64):
+    """Guarda un archivo .glb subido en base64 en SelectVehicle/assets."""
+    import base64
+    try:
+        ruta = os.path.join(os.path.dirname(__file__), 'web', 'SelectVehicle', 'assets')
+        os.makedirs(ruta, exist_ok=True)
+        ruta_archivo = os.path.join(ruta, nombre)
+        raw = base64.b64decode(datos_b64)
+        with open(ruta_archivo, 'wb') as f:
+            f.write(raw)
+        print(f"[backend] Modelo GLB guardado: {nombre}")
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@eel.expose
 def seleccionar_vehiculo(tipo):
     """Actualiza el vehículo seleccionado desde el frontend."""
     global VEHICULO_SELECCIONADO

@@ -57,7 +57,46 @@ body {
 .panel-sub {
   font-size: 0.75rem;
   color: var(--text-muted);
-  padding: 0 20px 16px;
+  padding: 0 20px 10px;
+}
+
+.upload-btn {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 12px 8px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  width: calc(100% - 24px);
+}
+.upload-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(108,99,255,0.06);
+}
+
+.error-banner {
+  margin: 0 12px 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255,107,107,0.12);
+  border: 1px solid rgba(255,107,107,0.3);
+  color: #ff8f8f; font-size: 0.75rem; line-height: 1.4;
+  display: none;
+}
+.error-banner.visible { display: block; }
+
+/* Badge para modelos GLB externos */
+.vehicle-item__badge {
+  font-size: 0.55rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 4px;
+  background: rgba(63,184,245,0.15);
+  color: var(--accent2); flex-shrink: 0;
 }
 
 .vehicle-list {

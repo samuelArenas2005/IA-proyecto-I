@@ -25,33 +25,15 @@
         <h2 class="panel-title">Garaje</h2>
         <p class="panel-sub">Elige tu vehículo</p>
 
+        <!-- Subir modelo .glb -->
+        <button class="upload-btn" onclick="document.getElementById('glb-input').click()">
+          <i class="fa-solid fa-upload"></i> Subir modelo (.glb)
+        </button>
+        <input type="file" id="glb-input" accept=".glb" style="display:none">
+        <div class="error-banner" id="error-banner"></div>
+
         <div class="vehicle-list" id="vehicle-list">
-          <div class="vehicle-item" id="item-carro" onclick="selectVehicle('carro')">
-            <div class="vehicle-item__icon"><i class="fa-solid fa-car"></i></div>
-            <div class="vehicle-item__info">
-              <span class="vehicle-item__name">Carro</span>
-              <span class="vehicle-item__desc">Vehículo estándar</span>
-            </div>
-            <i class="fa-solid fa-check vehicle-item__check"></i>
-          </div>
-
-          <div class="vehicle-item" id="item-moto" onclick="selectVehicle('moto')">
-            <div class="vehicle-item__icon"><i class="fa-solid fa-motorcycle"></i></div>
-            <div class="vehicle-item__info">
-              <span class="vehicle-item__name">Moto</span>
-              <span class="vehicle-item__desc">Ágil y veloz</span>
-            </div>
-            <i class="fa-solid fa-check vehicle-item__check"></i>
-          </div>
-
-          <div class="vehicle-item" id="item-helicoptero" onclick="selectVehicle('helicoptero')">
-            <div class="vehicle-item__icon"><i class="fa-solid fa-helicopter"></i></div>
-            <div class="vehicle-item__info">
-              <span class="vehicle-item__name">Helicóptero</span>
-              <span class="vehicle-item__desc">Vista aérea premium</span>
-            </div>
-            <i class="fa-solid fa-check vehicle-item__check"></i>
-          </div>
+          <!-- Poblado dinámicamente -->
         </div>
       </div>
 
