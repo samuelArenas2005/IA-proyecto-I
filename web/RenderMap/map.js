@@ -528,7 +528,8 @@ function buildCity(matrix) {
   let moveProgress = 0;
   let isMoving = false;
   let isPaused = false;
-  let speedMultiplier = 1.0; // Por defecto x1
+  let speedBtnUI = document.getElementById('btn-speed');
+  let speedMultiplier = speedBtnUI ? parseFloat(speedBtnUI.dataset.speed || 1.0) : 1.0; 
   let treeAnimFrame = null;
 
   function checkAndAnimatePerson(row, col) {
@@ -747,10 +748,27 @@ function buildCity(matrix) {
     treeAnimFrame = requestAnimationFrame(loopSketch);
   }
 
-  function openSearchTreePanel() {
+  async function openSearchTreePanel() {
     const panel = document.getElementById('tree-sketch-panel');
     if (!panel) return;
+    
+    if (window.eel && window.eel.obtener_search_tree) {
+       let st = await window.eel.obtener_search_tree()();
+       if (!st || st.length === 0) {
+           const algoSel = document.getElementById('select-algoritmo');
+           if (algoSel && window.eel.seleccionar_algoritmo) {
+               await window.eel.seleccionar_algoritmo(algoSel.value)();
+           }
+           const ruta = await window.eel.obtener_ruta()();
+           window.__lastRoute = Array.isArray(ruta) ? ruta : [];
+           st = await window.eel.obtener_search_tree()();
+       }
+       window.__lastSearchTree = st || [];
+    }
+
     panel.style.display = 'block';
+    const informe = document.getElementById('informe-panel');
+    if (informe) informe.style.display = 'block';
     drawSearchTreeAtStep(1);
     animateSearchTreeSketch();
   }
@@ -758,7 +776,14 @@ function buildCity(matrix) {
   document.getElementById('btn-show-tree')?.addEventListener('click', openSearchTreePanel);
   document.getElementById('btn-close-tree-panel')?.addEventListener('click', () => {
     const panel = document.getElementById('tree-sketch-panel');
-    if (panel) panel.style.display = 'none';
+    if (panel) {
+        panel.style.display = 'none';
+        panel.classList.remove('tree-sketch-panel--expanded');
+        const icon = document.getElementById('icon-expand-tree');
+        if (icon) icon.classList.replace('fa-compress', 'fa-expand');
+    }
+    const informe = document.getElementById('informe-panel');
+    if (informe) informe.style.display = 'none';
     if (treeAnimFrame) cancelAnimationFrame(treeAnimFrame);
   });
   document.getElementById('btn-replay-tree')?.addEventListener('click', animateSearchTreeSketch);
@@ -854,6 +879,7 @@ function buildCity(matrix) {
 
   // ── Animation loop ──
   (function loop() {
+    if (!renderer.domElement.isConnected) return; // Clean up anim loop on map reload
     requestAnimationFrame(loop);
     
     // Rotor animation
@@ -864,7 +890,7 @@ function buildCity(matrix) {
     // Sistema de movimiento a pasos pequeños, de mitad en mitad
     if (isMoving && !isPaused && currentPath && pathIndex < currentPath.length - 1) {
       // Avanzar de manera fluida (velocidad por frame, multiplicada por speedMultiplier)
-      moveProgress += 0.02 * speedMultiplier; 
+      moveProgress += 0.038 * speedMultiplier; // Base incrementada
       
       if (moveProgress >= 1) {
         moveProgress = 0;
@@ -1095,6 +1121,10 @@ setTimeout(() => {
     btnPlay.addEventListener('click', async () => {
       try {
         if (window.eel && window.eel.obtener_ruta) {
+          const algoSel = document.getElementById('select-algoritmo');
+          if (algoSel && window.eel.seleccionar_algoritmo) {
+             await window.eel.seleccionar_algoritmo(algoSel.value)();
+          }
           const ruta = await window.eel.obtener_ruta()();
           window.__lastRoute = Array.isArray(ruta) ? ruta : [];
           if (window.eel.obtener_search_tree) {

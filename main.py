@@ -43,6 +43,11 @@ def seleccionar_algoritmo(tipo):
     print(f"[backend] Algoritmo cambiado a: {tipo}")
 
 @eel.expose
+def obtener_algoritmo():
+    """Retorna el algoritmo seleccionado."""
+    return ALGORITMO_SELECCIONADO
+
+@eel.expose
 def seleccionar_vehiculo(tipo):
     """Actualiza el vehículo seleccionado desde el frontend."""
     global VEHICULO_SELECCIONADO

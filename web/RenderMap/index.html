@@ -29,31 +29,102 @@
   <header class="top-bar">
     <div class="top-bar__left">
       <!-- Volver al menú -->
-      <button id="btn-back" class="btn-back" title="Volver al menú"
-              onclick="irAlMenu()">
+      <button id="btn-back" class="btn-back" title="Volver al menú" onclick="irAlMenu()">
         <i class="fa-solid fa-arrow-left"></i>
       </button>
       <span class="logo-text">Ciudad <em>10×10</em></span>
+      
+      <div class="header-divider"></div>
+      <div class="header-titles">
+        <span class="nav-algo-title" id="nav-algo-title">Cargando...</span>
+        <span class="nav-map-title" id="nav-map-title">mapa1.txt</span>
+      </div>
     </div>
-     <button id="btn-theme" class="btn-theme" title="Cambiar tema" onclick="toggleTheme()">
+
+    <div class="top-bar__right">
+      <button id="btn-theme" class="btn-theme" title="Cambiar tema" onclick="toggleTheme()">
         <i id="icon-theme" class="fa-solid fa-sun"></i>
       </button>
-    <div class="top-bar__right">
-      <div class="status-badge"><span class="status-dot"></span> Conectado</div>
-      <!-- Botón tema: icono + tooltip -->
     </div>
   </header>
 
-  <!-- ── Leyenda flotante (derecha) ── -->
-  <div class="map-legend">
-    <p class="map-legend__title">Leyenda</p>
-    <div class="legend-item"><span class="legend-dot" style="background:#23263a;border:1px solid #555"></span> Calle</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#6c63ff"></span> Edificio / Parque</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#51cf66"></span> Inicio carro</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#00ff00; box-shadow: 0 0 6px #00ff00;"></span> Semáforo</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#74c0fc"></span> Calle + persona</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b"></span> Meta</div>
-  </div>
+  <!-- ── Contenedor lateral derecho ── -->
+  <div class="right-panels-container">
+    
+    <!-- Leyenda flotante interactiva -->
+    <div class="map-legend">
+      <div class="map-legend__header" onclick="toggleLegend()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+        <p class="map-legend__title" style="margin: 0;">Leyenda</p>
+        <i id="legend-arrow" class="fa-solid fa-chevron-down" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.3s; transform: rotate(180deg);"></i>
+      </div>
+      <div id="legend-content" style="margin-top: 10px; display: none;">
+        <div class="legend-item"><span class="legend-dot" style="background:#23263a;border:1px solid #555"></span> Calle</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#6c63ff"></span> Edificio / Parque</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#51cf66"></span> Inicio carro</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#00ff00; box-shadow: 0 0 6px #00ff00;"></span> Semáforo</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#74c0fc"></span> Calle + persona</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b"></span> Meta</div>
+      </div>
+    </div>
+
+    <!-- Configuración rápida -->
+    <div class="map-legend" id="config-panel">
+      <div class="map-legend__header" onclick="toggleConfig()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+        <p class="map-legend__title" style="margin: 0;">Configuración rápida</p>
+        <i id="config-arrow" class="fa-solid fa-chevron-down" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.3s;"></i>
+      </div>
+      <div id="config-content" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div>
+          <label style="font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; display: block; font-weight: 600;">ELEGIR ALGORITMO</label>
+          <select id="select-algoritmo" class="custom-select" style="width: 100%;" onchange="changeAlgoSelect()" title="Seleccionar Algoritmo">
+            <option value="amplitud">Amplitud</option>
+            <option value="costo_uniforme">Costo Uniforme</option>
+            <option value="profundidad">Profundidad</option>
+            <option value="avara">Avara</option>
+            <option value="a_estrella">A*</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; display: block; font-weight: 600;">ELEGIR MAPA</label>
+          <select id="select-mapa" class="custom-select" style="width: 100%;" onchange="changeMapSelect()" title="Seleccionar Mapa">
+            <option value="mapa1.txt">mapa1.txt</option>
+            <option value="mapa2.txt">mapa2.txt</option>
+            <option value="mapa3.txt">mapa3.txt</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel boceto superior del árbol (movido aquí) -->
+    <div id="tree-sketch-panel" class="map-legend" style="display:none; padding: 14px 18px; transition: all 0.3s ease;">
+      <div class="tree-sketch-header" style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <span class="map-legend__title" style="margin: 0; display: inline-block;">Árbol de expansión</span>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-expand-tree-panel" title="Expandir/Reducir" style="border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 4px;" onclick="window.toggleTreeExpand()">
+            <i id="icon-expand-tree" class="fa-solid fa-expand"></i>
+          </button>
+          <button id="btn-close-tree-panel" class="tree-sketch-close" title="Cerrar" style="border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 4px;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div>
+        <canvas id="tree-sketch-canvas" width="360" height="360" style="width: 100%; height: auto; border: 1px solid var(--border); border-radius: 10px; background: rgba(13, 16, 32, .8); display: block;"></canvas>
+        <button id="btn-replay-tree" class="tree-sketch-replay" style="margin-top: 8px; width: 100%; height: 34px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: rgba(255,255,255,.05); cursor: pointer; transition: background 0.2s;">Reproducir</button>
+      </div>
+    </div>
+
+    <!-- Recuadro de Informe Analítico -->
+    <div id="informe-panel" class="map-legend" style="padding: 14px 18px; display: none;">
+      <div class="map-legend__header" style="margin-bottom: 8px;">
+        <span class="map-legend__title" style="margin: 0;">Informe Analítico</span>
+      </div>
+      <div id="informe-content" style="color: var(--text); font-size: 0.75rem;">
+        (Sin datos actuales)
+      </div>
+    </div>
+
+  </div> <!-- end right-panels-container -->
 
   <!-- ── Controles (IZQUIERDA, centrado vertical) ── -->
   <div class="map-controls">
@@ -117,17 +188,7 @@
   <!-- Toast -->
   <div class="toast" id="toast"><span id="toast-msg"></span></div>
 
-  <!-- Panel boceto superior del árbol -->
-  <div id="tree-sketch-panel" class="tree-sketch-panel" style="display:none;">
-    <div class="tree-sketch-header">
-      <span>Boceto superior · árbol de expansión</span>
-      <button id="btn-close-tree-panel" class="tree-sketch-close" title="Cerrar">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <canvas id="tree-sketch-canvas" width="360" height="360"></canvas>
-    <button id="btn-replay-tree" class="tree-sketch-replay">Reproducir animación</button>
-  </div>
+  <!-- Panel de árbol reubicado en el Sidebar -->
 
   <script src="/eel.js"></script>
   <script src="../api.js"></script>

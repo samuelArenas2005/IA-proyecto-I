@@ -79,6 +79,80 @@ html, body {
   gap: 10px;
 }
 
+.top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 10px;
+}
+.header-titles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.nav-algo-title {
+  color: var(--accent);
+  background: rgba(108,99,255,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.nav-map-title {
+  color: var(--cyan);
+  background: rgba(0,212,255,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ── Selects Personalizados ── */
+.custom-select {
+  appearance: none;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 30px 6px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236c63ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+.custom-select:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(108,99,255,0.25);
+}
+.custom-select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,212,255,0.3);
+}
+.custom-select option {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.light .custom-select {
+  background: rgba(255,255,255,0.9);
+  color: #1a1d40;
+  border-color: rgba(100,90,220,0.3);
+}
+body.light .custom-select option {
+  background: #fff;
+  color: #1a1d40;
+}
+
 .logo-icon { font-size: 1.5rem; }
 
 .logo-text {
@@ -198,17 +272,48 @@ body.light .btn-theme {
   margin: 2px 0;
 }
 
-/* ── Leyenda flotante ───────────────────────────── */
-.map-legend {
+/* ── Contenedor lateral derecho ── */
+.right-panels-container {
   position: fixed;
-  top: 70px; right: 16px;
+  top: 70px;
+  right: 16px;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 220px;
+  min-width: 200px;
+  max-width: 90vw;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: none; /* Allows passing clicks in empty space */
+}
+.right-panels-container > * {
+  pointer-events: auto; /* Restores clicks inside elements */
+}
+
+.tree-sketch-panel--expanded {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 500px !important;
+  max-width: 90vw !important;
+  z-index: 999 !important;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.5) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* ── Elemento panel (generalizado desde map-legend) ───────────────────────────── */
+.map-legend {
   background: var(--surface);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 18px;
-  min-width: 175px;
+  width: 100%;
 }
 .map-legend__title {
   font-size: .68rem;
@@ -216,7 +321,6 @@ body.light .btn-theme {
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--muted);
-  margin-bottom: 10px;
 }
 .legend-item {
   display: flex;

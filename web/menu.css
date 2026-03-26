@@ -105,6 +105,16 @@ html, body {
   margin: 18px 0 20px;
 }
 
+/* ── Título Minimalista de Sección ── */
+.menu-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  margin: 6px 0 4px 6px;
+}
+
 /* ── Botones ── */
 .menu-buttons { display: flex; flex-direction: column; gap: 8px; }
 
@@ -155,6 +165,22 @@ html, body {
 .menu-btn--disabled:hover {
   background: rgba(255,255,255,0.08);
   border-color: rgba(255,255,255,0.09);
+}
+
+/* Botón Regresar */
+.menu-btn--return {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  border-color: rgba(255,255,255,0.08);
+}
+.menu-btn--return:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.menu-btn--return:active {
+  transform: translateX(-1px);
 }
 
 .menu-btn__icon {

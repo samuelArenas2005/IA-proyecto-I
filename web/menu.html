@@ -44,6 +44,9 @@
       <div class="menu-sep"></div>
 
       <nav class="menu-buttons" aria-label="Selección de algoritmo">
+        
+        <div class="menu-section-title">No Informados</div>
+        
         <button id="btn-amplitud" class="menu-btn menu-btn--active"
                 onclick="seleccionarAlgoritmo('amplitud')" title="Búsqueda por Amplitud">
           <span class="menu-btn__icon"><i class="fa-solid fa-arrows-to-dot"></i></span>
@@ -63,6 +66,8 @@
           <span class="menu-btn__label">Profundidad</span>
         </button>
 
+        <div class="menu-section-title" style="margin-top: 10px;">Informados</div>
+
         <!-- AVARA -->
         <button id="btn-avara" class="menu-btn menu-btn--active"
                 onclick="seleccionarAlgoritmo('avara')" title="Búsqueda Avara">
@@ -79,7 +84,7 @@
 
         <div class="menu-sep" style="margin: 10px 0;"></div>
         
-        <button class="menu-btn" style="background: rgba(255,255,255,0.05); color: #fff;" 
+        <button class="menu-btn menu-btn--return" 
                 onclick="regresarAlMenu()" title="Volver al menú principal">
           <span class="menu-btn__icon"><i class="fa-solid fa-arrow-left"></i></span>
           <span class="menu-btn__label">Regresar</span>
