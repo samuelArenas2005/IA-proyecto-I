@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Selección de Mapa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="modal-wrapper">
+    <div class="modal-content">
+      <!-- Panel de Lista (Izquierda) -->
+      <div class="left-panel">
+        <h2 class="panel-title">Archivos de Mapa</h2>
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="map-search" placeholder="Buscar mapa...">
+        </div>
+
+        <!-- Subir mapa -->
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+          <i class="fa-solid fa-upload"></i> Subir mapa (.txt)
+        </button>
+        <input type="file" id="file-input" accept=".txt" style="display:none">
+        <div class="error-banner" id="error-banner"></div>
+
+        <div class="map-list" id="map-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Panel de Vista Previa (Derecha) -->
+      <div class="right-panel">
+        <div class="preview-header">
+          <h2 class="panel-title" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Vista Previa</h2>
+          <button class="btn-close" onclick="closeModal()" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="preview-container" id="preview-container">
+        </div>
+
+        <div class="actions-panel">
+            <span id="selected-map-name" class="map-name-label">Seleccione un mapa...</span>
+            <button class="btn-confirm" id="btn-confirm" onclick="confirmMap()">
+                Elegir Mapa <i class="fa-solid fa-check"></i>
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/eel.js" onerror="console.warn('Eel bridge faltante o cargado en dev')"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

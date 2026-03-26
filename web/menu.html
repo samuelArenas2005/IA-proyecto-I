@@ -92,44 +92,7 @@
       </nav>
     </div>
 
-    <!-- Modal de selección de vehículos -->
-    <div id="vehiculo-modal" class="modal-overlay" style="display: none; opacity: 0;">
-      <div id="vehiculo-panel" class="menu-panel menu-panel--modal">
-        <div class="brand-tag">GARAJE</div>
-        <h1 class="brand-title">Selección<br>de Nave</h1>
-        <p class="brand-sub">Escoge tu medio de transporte</p>
-
-        <div class="menu-sep"></div>
-
-        <nav class="menu-buttons" aria-label="Selección de vehículo">
-          <button id="btn-carro" class="menu-btn menu-btn--active"
-                  onclick="cambiarVehiculoPreview('carro')" title="Coche convencional">
-            <span class="menu-btn__icon"><i class="fa-solid fa-car"></i></span>
-            <span class="menu-btn__label">Carro</span>
-          </button>
-
-          <button id="btn-moto" class="menu-btn"
-                  onclick="cambiarVehiculoPreview('moto')" title="Moto rápida">
-            <span class="menu-btn__icon"><i class="fa-solid fa-motorcycle"></i></span>
-            <span class="menu-btn__label">Moto</span>
-          </button>
-
-          <button id="btn-helicoptero" class="menu-btn"
-                  onclick="cambiarVehiculoPreview('helicoptero')" title="Transporte aéreo">
-            <span class="menu-btn__icon"><i class="fa-solid fa-helicopter"></i></span>
-            <span class="menu-btn__label">Helicóptero</span>
-          </button>
-
-          <div class="menu-sep" style="margin: 10px 0;"></div>
-
-          <button class="menu-btn menu-btn--active" style="background: var(--accent); border-color: var(--accent);"
-                  onclick="cerrarModalVehiculo()" title="Confirmar y volver">
-            <span class="menu-btn__icon"><i class="fa-solid fa-check"></i></span>
-            <span class="menu-btn__label">Listo</span>
-          </button>
-        </nav>
-      </div>
-    </div>
+    <!-- Modal vehículo → delegar a SelectVehicle/ (ver más abajo) -->
 
     <!-- Modal de configuración de profundidad -->
     <div id="profundidad-modal" class="modal-overlay" style="display: none; opacity: 0;">
@@ -207,14 +170,53 @@
         </button>
 
       </nav>
+
+      <!-- Estado actual (mapa + vehículo seleccionado) -->
+      <div class="session-card">
+        <div class="session-card__item">
+          <span class="session-card__icon"><i class="fa-solid fa-map-location-dot"></i></span>
+          <div class="session-card__info">
+            <span class="session-card__label">Mapa</span>
+            <span class="session-card__value" id="status-mapa">Cargando...</span>
+          </div>
+        </div>
+        <div class="session-card__divider"></div>
+        <div class="session-card__item">
+          <span class="session-card__icon"><i class="fa-solid fa-car-side"></i></span>
+          <div class="session-card__info">
+            <span class="session-card__label">Vehículo</span>
+            <span class="session-card__value" id="status-vehiculo">Carro</span>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Botón de Garaje (Esquina Inferior Izquierda) -->
-    <button id="btn-open-garage" class="garage-toggle" 
-            onclick="abrirModalVehiculo()" title="Abrir Garaje">
-      <i class="fa-solid fa-car-side"></i>
-    </button>
+    <!-- Controles Flotantes Extras (Esquina Inferior Izquierda) -->
+    <div style="position: absolute; bottom: 30px; left: 30px; display: flex; gap: 15px; z-index: 100;">
+      <!-- Botón de Garaje -->
+      <button id="btn-open-garage" class="garage-toggle" style="position: static;"
+              onclick="abrirModalVehiculo()" title="Abrir Garaje">
+        <i class="fa-solid fa-car-side"></i>
+      </button>
+
+      <!-- Botón de Mapa -->
+      <button id="btn-open-map" class="garage-toggle" style="position: static; background: var(--accent); border-color: var(--accent);"
+              onclick="abrirModalMapa()" title="Seleccionar Mapa">
+        <i class="fa-solid fa-map"></i>
+      </button>
+    </div>
   </main>
+
+  <!-- Modales iframe (aislados para 3D) -->
+  <div id="vehicle-modal" class="modal-overlay" style="display: none; opacity: 0; z-index: 9999;">
+    <iframe id="vehicle-iframe" src="SelectVehicle/index.html" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
+  </div>
+
+  <!-- Modal Selector de Mapas -->
+  <div id="map-modal" class="modal-overlay" style="display: none; opacity: 0; z-index: 9999;">
+    <iframe id="map-iframe" src="SelectMap/index.html" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
+  </div>
 
   <div class="version-tag">v0.1.0-alpha</div>
 

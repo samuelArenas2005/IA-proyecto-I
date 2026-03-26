@@ -310,6 +310,30 @@ function createHelicopter(TS, color) {
   loop();
 })(DEFAULT_MATRIX);
 
+// ── Tarjeta de sesión ─────────────────────────────────────────────────────────
+const VEHICLE_LABELS = { carro: 'Carro', moto: 'Moto', helicoptero: 'Helicóptero' };
+
+function updateSessionCard(mapa, vehiculo) {
+    const elMapa = document.getElementById('status-mapa');
+    const elVeh  = document.getElementById('status-vehiculo');
+    if (elMapa) elMapa.textContent = mapa || '—';
+    if (elVeh)  elVeh.textContent  = VEHICLE_LABELS[vehiculo] || vehiculo || '—';
+}
+
+// Cargar estado inicial desde el backend
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(async () => {
+        if (typeof eel === 'undefined') return;
+        try {
+            const [mapa, vehiculo] = await Promise.all([
+                eel.obtener_mapa_global()(),
+                eel.obtener_vehiculo()()
+            ]);
+            updateSessionCard(mapa, vehiculo);
+        } catch(e) {}
+    }, 500);
+});
+
 window.irAlJuego = function() {
   const mainPanel = document.getElementById('main-panel');
   const algoPanel = document.getElementById('algoritmo-panel');
@@ -381,33 +405,47 @@ window.seleccionarAlgoritmo = function(tipo) {
   requestAnimationFrame(animateZoom);
 };
 
+// ── Modal Vehículo (iframe SelectVehicle) ─────────────────────────────────────
 window.abrirModalVehiculo = function() {
-  const modal = document.getElementById('vehiculo-modal');
+  const modal = document.getElementById('vehicle-modal');
+  if(!modal) return;
   modal.style.display = 'flex';
   setTimeout(() => modal.style.opacity = '1', 10);
 };
 
 window.cerrarModalVehiculo = function() {
-  const modal = document.getElementById('vehiculo-modal');
+  const modal = document.getElementById('vehicle-modal');
+  if(!modal) return;
   modal.style.opacity = '0';
   setTimeout(() => modal.style.display = 'none', 400);
 };
 
-window.cambiarVehiculoPreview = function(tipo) {
-  if (typeof eel !== 'undefined' && eel.seleccionar_vehiculo) {
-      eel.seleccionar_vehiculo(tipo)();
-  } else {
-      console.warn("Eel: seleccionar_vehiculo no disponible en el backend");
-  }
-  
-  ['carro', 'moto', 'helicoptero'].forEach(v => {
-    const btn = document.getElementById('btn-' + v);
-    if (btn) {
-      if (v === tipo) btn.classList.add('menu-btn--active');
-      else btn.classList.remove('menu-btn--active');
-    }
-  });
+window.onVehicleSelected = function(tipo) {
+  // Actualizar la previsualización del fondo 3D con el nuevo vehículo
   if (window.actualizarPreviewVehiculo) window.actualizarPreviewVehiculo(tipo);
+  // Actualizar tarjeta de sesión
+  const elVeh = document.getElementById('status-vehiculo');
+  if (elVeh) elVeh.textContent = VEHICLE_LABELS[tipo] || tipo;
+};
+
+window.abrirModalMapa = function() {
+  const modal = document.getElementById('map-modal');
+  if(!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(() => modal.style.opacity = '1', 10);
+};
+
+window.cerrarModalMapa = function() {
+  const modal = document.getElementById('map-modal');
+  if(!modal) return;
+  modal.style.opacity = '0';
+  setTimeout(() => modal.style.display = 'none', 400);
+};
+
+window.onMapSelected = function(mapa) {
+  // Actualizar tarjeta de sesión
+  const elMapa = document.getElementById('status-mapa');
+  if (elMapa) elMapa.textContent = mapa || '—';
 };
 
 window.irAlCrearMapa = function() {

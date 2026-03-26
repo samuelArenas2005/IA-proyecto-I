@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Selección de Vehículo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="modal-wrapper">
+    <div class="modal-content">
+
+      <!-- Panel Izquierdo: Lista de Vehículos -->
+      <div class="left-panel">
+        <h2 class="panel-title">Garaje</h2>
+        <p class="panel-sub">Elige tu vehículo</p>
+
+        <div class="vehicle-list" id="vehicle-list">
+          <div class="vehicle-item" id="item-carro" onclick="selectVehicle('carro')">
+            <div class="vehicle-item__icon"><i class="fa-solid fa-car"></i></div>
+            <div class="vehicle-item__info">
+              <span class="vehicle-item__name">Carro</span>
+              <span class="vehicle-item__desc">Vehículo estándar</span>
+            </div>
+            <i class="fa-solid fa-check vehicle-item__check"></i>
+          </div>
+
+          <div class="vehicle-item" id="item-moto" onclick="selectVehicle('moto')">
+            <div class="vehicle-item__icon"><i class="fa-solid fa-motorcycle"></i></div>
+            <div class="vehicle-item__info">
+              <span class="vehicle-item__name">Moto</span>
+              <span class="vehicle-item__desc">Ágil y veloz</span>
+            </div>
+            <i class="fa-solid fa-check vehicle-item__check"></i>
+          </div>
+
+          <div class="vehicle-item" id="item-helicoptero" onclick="selectVehicle('helicoptero')">
+            <div class="vehicle-item__icon"><i class="fa-solid fa-helicopter"></i></div>
+            <div class="vehicle-item__info">
+              <span class="vehicle-item__name">Helicóptero</span>
+              <span class="vehicle-item__desc">Vista aérea premium</span>
+            </div>
+            <i class="fa-solid fa-check vehicle-item__check"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Derecho: Previsualización 3D -->
+      <div class="right-panel">
+        <div class="preview-header">
+          <h2 class="panel-title" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Vista Previa</h2>
+          <button class="btn-close" onclick="closeModal()" title="Cerrar">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="preview-container" id="preview-container"></div>
+
+        <div class="actions-panel">
+          <span id="selected-vehicle-name" class="vehicle-name-label">Carro</span>
+          <button class="btn-confirm active" id="btn-confirm" onclick="confirmVehicle()">
+            Usar vehículo <i class="fa-solid fa-check"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/eel.js" onerror="console.warn('eel.js no disponible')"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

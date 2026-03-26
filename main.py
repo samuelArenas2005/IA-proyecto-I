@@ -8,6 +8,7 @@ from busquedaAvara import busqueda_avara
 
 ALGORITMO_SELECCIONADO = ""
 VEHICULO_SELECCIONADO = "carro"
+MAPA_SELECCIONADO = "mapa1.txt"
 
 # Orden por defecto de operadores para búsqueda en profundidad
 ORDEN_OPERADORES_PROFUNDIDAD = ['izquierda', 'abajo', 'derecha', 'arriba']
@@ -48,6 +49,32 @@ def obtener_algoritmo():
     return ALGORITMO_SELECCIONADO
 
 @eel.expose
+def seleccionar_mapa_global(mapa):
+    """Actualiza el mapa seleccionado antes de renderizar."""
+    global MAPA_SELECCIONADO, CITY_MATRIX
+    MAPA_SELECCIONADO = mapa
+    # También cargamos la matriz inmediatamente para que esté lista
+    ruta_mapas = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas', mapa)
+    matriz = cargar_matriz_desde_texto(ruta_mapas)
+    if matriz is not None:
+        CITY_MATRIX = matriz
+    print(f"[backend] Mapa por defecto cambiado a: {mapa}")
+
+@eel.expose
+def obtener_mapa_global():
+    """Retorna el mapa seleccionado por defecto."""
+    return MAPA_SELECCIONADO
+
+@eel.expose
+def obtener_lista_mapas():
+    """Retorna la lista de archivos de mapa en la carpeta mapas/pruebas."""
+    ruta_mapas = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas')
+    if not os.path.exists(ruta_mapas):
+        return []
+    archivos = [f for f in os.listdir(ruta_mapas) if f.endswith('.txt')]
+    return sorted(archivos)
+
+@eel.expose
 def seleccionar_vehiculo(tipo):
     """Actualiza el vehículo seleccionado desde el frontend."""
     global VEHICULO_SELECCIONADO
@@ -73,6 +100,20 @@ def establecer_orden_operadores(orden):
 def obtener_orden_operadores():
     """Retorna el orden actual de operadores."""
     return ORDEN_OPERADORES_PROFUNDIDAD
+
+@eel.expose
+def guardar_mapa_subido(nombre, contenido):
+    """Guarda un mapa subido desde el frontend en la carpeta mapas/pruebas."""
+    try:
+        ruta_mapas = os.path.join(os.path.dirname(__file__), 'mapas', 'pruebas')
+        os.makedirs(ruta_mapas, exist_ok=True)
+        ruta_archivo = os.path.join(ruta_mapas, nombre)
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            f.write(contenido)
+        print(f"[backend] Mapa guardado: {nombre}")
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 @eel.expose
 def obtener_search_tree():

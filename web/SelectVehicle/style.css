@@ -1,0 +1,211 @@
+:root {
+  --bg-dark: #0d1020;
+  --bg-panel: #14182b;
+  --bg-item: #1f233b;
+  --bg-item-hover: #292d47;
+  --accent: #6c63ff;
+  --accent2: #3fb8f5;
+  --text: #f8f9fc;
+  --text-muted: #a0a6cc;
+  --border: #2b324d;
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+  overflow: hidden;
+  background: transparent;
+}
+
+.modal-wrapper {
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.modal-content {
+  width: 860px;
+  height: 560px;
+  max-width: 95vw;
+  max-height: 95vh;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+  overflow: hidden;
+}
+
+/* ── Panel Izquierdo ── */
+.left-panel {
+  width: 300px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  padding-bottom: 20px;
+}
+
+.panel-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 20px 20px 4px;
+  color: #fff;
+}
+
+.panel-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0 20px 16px;
+}
+
+.vehicle-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vehicle-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1.5px solid transparent;
+  position: relative;
+}
+
+.vehicle-item:hover {
+  background: var(--bg-item-hover);
+  border-color: var(--border);
+}
+
+.vehicle-item.selected {
+  background: linear-gradient(120deg, rgba(108, 99, 255, 0.25), rgba(63, 184, 245, 0.12));
+  border-color: var(--accent);
+}
+
+.vehicle-item__icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: rgba(108, 99, 255, 0.12);
+  color: var(--accent);
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.vehicle-item.selected .vehicle-item__icon {
+  background: var(--accent);
+  color: #fff;
+}
+
+.vehicle-item__info {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.vehicle-item__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.vehicle-item__desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.vehicle-item__check {
+  color: var(--accent);
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.vehicle-item.selected .vehicle-item__check {
+  opacity: 1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3b4266; border-radius: 4px; }
+
+/* ── Panel Derecho ── */
+.right-panel {
+  flex: 1;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+
+.preview-header {
+  display: flex; justify-content: space-between; align-items: center;
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.preview-header .panel-title { pointer-events: auto; }
+
+.btn-close {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; font-size: 1.2rem;
+  width: 40px; height: 40px;
+  border-radius: 50%; cursor: pointer;
+  pointer-events: auto;
+  margin: 15px 20px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.btn-close:hover { background: #ff6b6b; border-color: #ff6b6b; }
+
+.preview-container {
+  flex: 1;
+  background: var(--bg-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+.actions-panel {
+  position: absolute; bottom: 20px; left: 20px; right: 20px;
+  background: rgba(20, 24, 43, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 20;
+}
+
+.vehicle-name-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent2);
+}
+
+.btn-confirm {
+  background: var(--accent);
+  color: #fff; border: none; padding: 10px 24px;
+  border-radius: 8px; font-family: inherit;
+  font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.35);
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.55);
+}
+
+.btn-confirm:active { transform: scale(0.97); }

@@ -144,6 +144,7 @@ window.toggleTreeExpand = function() {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(async () => { 
         if(window.eel) {
+            // Cargar Algoritmos
             try {
                 const algoEel = await window.eel.obtener_algoritmo()();
                 const algoSelect = document.getElementById('select-algoritmo');
@@ -166,12 +167,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch(e) { console.error(e); }
             
-            // fetch initial map
-            const selMap = document.getElementById('select-mapa');
-            const navMapTitle = document.getElementById('nav-map-title');
-            if(selMap && navMapTitle) {
-                navMapTitle.textContent = selMap.options[selMap.selectedIndex].text;
-            }
+            // Cargar Mapas dinámicamente
+            try {
+                const mapList = await window.eel.obtener_lista_mapas()();
+                const selMap = document.getElementById('select-mapa');
+                if(selMap && mapList) {
+                    selMap.innerHTML = '';
+                    mapList.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.textContent = m;
+                        selMap.appendChild(opt);
+                    });
+                    
+                    // Ver cuál es el global actual
+                    const currentMap = await window.eel.obtener_mapa_global()();
+                    if(currentMap && mapList.includes(currentMap)) {
+                        selMap.value = currentMap;
+                    }
+                    
+                    const navMapTitle = document.getElementById('nav-map-title');
+                    if(navMapTitle) {
+                        navMapTitle.textContent = selMap.options[selMap.selectedIndex]?.text || '...';
+                    }
+                }
+            } catch(e) { console.error(e); }
         }
     }, 600);
 });

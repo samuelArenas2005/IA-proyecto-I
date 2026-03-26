@@ -240,6 +240,7 @@ html, body {
   font-size: 1.4rem; cursor: pointer;
   z-index: 10; transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: #fff;
 }
 .garage-toggle:hover {
   transform: translateY(-4px) scale(1.05);
@@ -329,4 +330,68 @@ html, body {
 
 .operador-item:hover .operador-grip {
   color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Tarjeta de sesión (estado mapa + vehículo) ── */
+.session-card {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  backdrop-filter: blur(4px);
+}
+
+.session-card__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-card__divider {
+  width: 1px;
+  height: 30px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+
+.session-card__icon {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 7px;
+  background: rgba(124,111,255,0.15);
+  color: var(--accent);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.session-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.session-card__label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(220,224,255,0.4);
+}
+
+.session-card__value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(220,224,255,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
