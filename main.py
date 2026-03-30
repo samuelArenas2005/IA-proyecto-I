@@ -5,6 +5,7 @@ from busquedaAmplitud import busqueda_amplitud
 from busquedaCostoUniforme import busqueda_costo_uniforme
 from busquedaProfundidad import busqueda_profundidad
 from busquedaAvara import busqueda_avara
+from busquedaAEstrella import busqueda_a_estrella
 
 ALGORITMO_SELECCIONADO = ""
 VEHICULO_SELECCIONADO = "carro"
@@ -116,7 +117,7 @@ def establecer_orden_operadores(orden):
     global ORDEN_OPERADORES_PROFUNDIDAD
     if isinstance(orden, list) and len(orden) == 4:
         ORDEN_OPERADORES_PROFUNDIDAD = orden
-        print(f"[backend] Orden de operadores actualizado: {orden}")
+        print(f"Orden de operadores actualizado: {orden}")
         return {"ok": True}
     return {"ok": False, "error": "Orden inválido"}
 
@@ -154,6 +155,7 @@ def obtener_ruta():
         "costo_uniforme": busqueda_costo_uniforme,
         "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD),
         "avara": busqueda_avara,
+        "a_estrella": busqueda_a_estrella,
     }
     
     func = algoritmos.get(ALGORITMO_SELECCIONADO)

@@ -1,18 +1,25 @@
 from Nodo import Nodo
 from Formulacion import is_goal, Status
-from Utilidades import number_peoples, get_nodo_raiz
+from Utilidades import number_peoples, get_nodo_raiz, get_ubication_end
 
-def busqueda_costo_uniforme(city_map):
+def busqueda_a_estrella(city_map):
+    
     search_tree = []
     cola = []
     cola.append(get_nodo_raiz(city_map))
-    nPeople, _ = number_peoples(city_map)
+    nPeople, people_position = number_peoples(city_map)
+    end_position = get_ubication_end(city_map)
 
     while True:
         if len(cola) == 0:
             return False, search_tree
+
+        def prioridad(n):
+            if n.Heuristic is None:
+                return n.Cost  
+            return n.Cost + n.Heuristic
         
-        cola.sort(key=lambda x: x.Cost)
+        cola.sort(key=prioridad)
         n = cola.pop(0)
         if len(n.Path) >= 2:
             parent = n.Path[-2]
@@ -25,17 +32,17 @@ def busqueda_costo_uniforme(city_map):
         if is_goal(city_map, n.Status, nPeople):
             return n, search_tree
         
-        hijos = n.expandir_no_informada(city_map)
+        hijos = n.expandir_informada(city_map, people_position, end_position)
         cola.extend(hijos)
-    
+
 if __name__ == "__main__":
     from Utilidades import inicializar_matriz
     
     matriz_real = inicializar_matriz()
     
-    nodoMeta, search_tree = busqueda_costo_uniforme(matriz_real)
+    nodoMeta, search_tree = busqueda_a_estrella(matriz_real)
     if nodoMeta:
-        print(f"Éxito (Costo Uniforme). Costo: {nodoMeta.Cost}")
+        print(f"Éxito (A*). Costo: {nodoMeta.Cost}")
         print(f"Camino: {nodoMeta.Path}")
     else:
         print("No se encontró solución para el mapa real.")
