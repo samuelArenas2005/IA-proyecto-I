@@ -129,18 +129,17 @@ class Nodo:
 
     @staticmethod
     def calculate_heuristic(people_position, actual_position, end_position):
-        heuristic = 0
-        heuristic_position = actual_position
-        pendientes = set(people_position)
+        def manhattan(a, b):
+            return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-        while pendientes:
-            cercano = min(
-                pendientes,
-                key=lambda p: abs(p[0] - heuristic_position[0]) + abs(p[1] - heuristic_position[1])
-            )
-            heuristic += abs(cercano[0] - heuristic_position[0]) + abs(cercano[1] - heuristic_position[1])
-            heuristic_position = cercano
-            pendientes.remove(cercano)
+        if not people_position:
+            return manhattan(actual_position, end_position)
 
-        heuristic += abs(end_position[0] - heuristic_position[0]) + abs(end_position[1] - heuristic_position[1])
-        return heuristic   
+        # Para cada pasajero pendiente: distancia desde aqui hasta el y desde el hasta la meta.
+        # El maximo es siempre un lower bound admisible: el taxi DEBE visitar cada pasajero
+        # y luego llegar a la meta, por lo que el costo real >= dist(actual,p) + dist(p,meta)
+        # para cualquier p que quede pendiente.
+        return max(
+            manhattan(actual_position, p) + manhattan(p, end_position)
+            for p in people_position
+        )
