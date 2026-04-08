@@ -13,7 +13,9 @@ class Nodo:
 
     def expandir_no_informada(self,city_map):
         
-        posX , posY, nPeople = self.Status.get_values()
+        posX = self.Status.x
+        posY = self.Status.y
+        nPeople = self.Status.nPeoples
         
         nodosHijos = []
         
@@ -28,12 +30,12 @@ class Nodo:
             if not(is_locked_func(city_map, posX, posY)):
                 new_posX, new_posY = posX + dx, posY + dy
                 new_nPeople = nPeople + add_person(city_map, new_posX, new_posY, self.People)
-                statusHijo = Status(new_posX, new_posY, new_nPeople)
+                if new_nPeople > nPeople:
+                    people = self.People | {(new_posX, new_posY)}
+                else:
+                    people = self.People
+                statusHijo = Status(new_posX, new_posY, new_nPeople, people)
                 if not(is_cycle(statusHijo.get_values(), self.Route)):
-                    if new_nPeople > nPeople:
-                        people = self.People | {(new_posX, new_posY)}
-                    else:
-                        people = self.People
                     new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
                     nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people,new_cost)
                     nodosHijos.append(nodoHijo)
@@ -51,7 +53,9 @@ class Nodo:
         Returns:
             Lista de nodos hijos en el orden especificado
         """
-        posX, posY, nPeople = self.Status.get_values()
+        posX = self.Status.x
+        posY = self.Status.y
+        nPeople = self.Status.nPeoples
         nodosHijos = []
         
         # Mapeo de nombres a funciones y direcciones
@@ -72,14 +76,14 @@ class Nodo:
             if not is_locked_func(city_map, posX, posY):
                 new_posX, new_posY = posX + dx, posY + dy
                 new_nPeople = nPeople + add_person(city_map, new_posX, new_posY, self.People)
-                statusHijo = Status(new_posX, new_posY, new_nPeople)
+                if new_nPeople > nPeople:
+                    people = self.People | {(new_posX, new_posY)}
+                else:
+                    people = self.People
+                statusHijo = Status(new_posX, new_posY, new_nPeople, people)
                 
                 # Evitar ciclos (ya implementado correctamente)
                 if not is_cycle(statusHijo.get_values(), self.Route):
-                    if new_nPeople > nPeople:
-                        people = self.People | {(new_posX, new_posY)}
-                    else:
-                        people = self.People
                     new_cost = self.Cost + add_cost(city_map, new_posX, new_posY)
                     nodoHijo = Nodo(
                         statusHijo,
@@ -96,7 +100,9 @@ class Nodo:
 
     def expandir_informada(self,city_map, people_position, end_position):
         
-        posX , posY, nPeople = self.Status.get_values()
+        posX = self.Status.x
+        posY = self.Status.y
+        nPeople = self.Status.nPeoples
         
         nodosHijos = []
         
@@ -111,12 +117,12 @@ class Nodo:
             if not(is_locked_func(city_map, posX, posY)):
                 new_posX, new_posY = posX + dx, posY + dy
                 new_nPeople = nPeople + add_person(city_map, new_posX, new_posY, self.People)
-                statusHijo = Status(new_posX, new_posY, new_nPeople)
+                if new_nPeople > nPeople:
+                    people = self.People | {(new_posX, new_posY)}
+                else:
+                    people = self.People
+                statusHijo = Status(new_posX, new_posY, new_nPeople, people)
                 if not(is_cycle(statusHijo.get_values(), self.Route)):
-                    if new_nPeople > nPeople:
-                        people = self.People | {(new_posX, new_posY)}
-                    else:
-                        people = self.People
                     new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
 
                     people_left_hijo  =  {p for p in people_position if p not in people}

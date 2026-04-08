@@ -9,13 +9,20 @@ def busqueda_avara(city_map):
     cola.append(get_nodo_raiz(city_map))
     nPeople, people_position = number_peoples(city_map)
     end_position = get_ubication_end(city_map)
-
+    visitados = set()
+    
     while True:
         if len(cola) == 0:
             return False, search_tree
         
         cola.sort(key=lambda n: n.Heuristic if n.Heuristic is not None else float('inf'))
         n = cola.pop(0)
+        
+        if n.Status.get_values() in visitados:
+            continue
+        
+        visitados.add(n.Status.get_values())
+        
         if len(n.Path) >= 2:
             parent = n.Path[-2]
             current = n.Path[-1]

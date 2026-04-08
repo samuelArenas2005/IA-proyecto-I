@@ -658,9 +658,11 @@ function buildCity(matrix) {
     if (path && path.error) {
       console.error(path.error);
       if (window.mostrar_notificacion) window.mostrar_notificacion("Error ruta: " + path.error);
-      return;
+      return false;
     }
-    if (!playerCar || !path || path.length < 2) return;
+    if (!playerCar || !Array.isArray(path) || path.length < 2) {
+      return false;
+    }
     
     // Resetear todos los semáforos a verde y personas antes de iniciar
     scene.traverse(o => {
@@ -691,6 +693,8 @@ function buildCity(matrix) {
     
     checkAndAnimatePerson(r0, c0);
     checkAndAnimateTraffic(r0, c0);
+
+    return true;
   };
 
   // ── Boceto superior del árbol de búsqueda ───────────────────────────────────
@@ -815,19 +819,29 @@ function buildCity(matrix) {
   async function openSearchTreePanel() {
     const panel = document.getElementById('tree-sketch-panel');
     if (!panel) return;
+
+    // Mostrar el algoritmo activo en el título del panel
+    const titleEl = panel.querySelector('.tree-sketch-header .map-legend__title');
+    const algoSel = document.getElementById('select-algoritmo');
+    if (titleEl && algoSel) {
+      let algoName = algoSel.options[algoSel.selectedIndex]?.text || 'Algoritmo';
+      if (algoSel.value === 'profundidad' && window.eel && window.eel.obtener_orden_operadores) {
+        try {
+          const orden = await window.eel.obtener_orden_operadores()();
+          if (orden && orden.length) {
+            const mapOrd = { izquierda: 'Izq', abajo: 'Aba', derecha: 'Der', arriba: 'Arr' };
+            algoName += ` [${orden.map(o => mapOrd[o] || o).join('-')}]`;
+          }
+        } catch (err) {
+          console.warn('[warn] No se pudo obtener orden de operadores:', err);
+        }
+      }
+      titleEl.textContent = `Árbol de expansión · ${algoName}`;
+    }
     
-    if (window.eel && window.eel.obtener_search_tree) {
-       let st = await window.eel.obtener_search_tree()();
-       if (!st || st.length === 0) {
-           const algoSel = document.getElementById('select-algoritmo');
-           if (algoSel && window.eel.seleccionar_algoritmo) {
-               await window.eel.seleccionar_algoritmo(algoSel.value)();
-           }
-           const ruta = await window.eel.obtener_ruta()();
-           window.__lastRoute = Array.isArray(ruta) ? ruta : [];
-           st = await window.eel.obtener_search_tree()();
-       }
-       window.__lastSearchTree = st || [];
+    if (window.__lastSearchTree == null || window.__lastSearchTree.length === 0) {
+      window.mostrar_notificacion?.('No hay árbol de búsqueda disponible. Presiona Play para generar la ruta.');
+      return;
     }
 
     panel.style.display = 'block';
@@ -1241,10 +1255,22 @@ setTimeout(() => {
           return;
         }
         
-        if (window.eel && window.eel.obtener_ruta) {
-          const algoSel = document.getElementById('select-algoritmo');
-          if (algoSel && window.eel.seleccionar_algoritmo) {
+        const algoSel = document.getElementById('select-algoritmo');
+        if (!algoSel || !algoSel.value) {
+          mostrarToast('Selecciona un algoritmo antes de iniciar la ruta');
+          return;
+        }
+
+        const algoName = algoSel.options[algoSel.selectedIndex]?.text || 'algoritmo';
+        const closeToast = mostrarToastPersistente(algoName);
+        disableControls();
+
+        try {
+          if (window.eel && window.eel.seleccionar_algoritmo) {
              await window.eel.seleccionar_algoritmo(algoSel.value)();
+          }
+          if (!window.eel || !window.eel.obtener_ruta) {
+            throw new Error('Backend no disponible');
           }
           const ruta = await window.eel.obtener_ruta()();
           window.__lastRoute = Array.isArray(ruta) ? ruta : [];
@@ -1256,18 +1282,26 @@ setTimeout(() => {
               window.__lastSearchTree = [];
             }
           }
-          if (window.startCarMovement) {
-            // Cambiar ícono a replay cuando se inicia
+          const started = window.startCarMovement ? window.startCarMovement(ruta) : false;
+          if (!started) {
+            mostrarToast('No se encontró una ruta válida o no se pudo iniciar el movimiento');
+            window.__isPlayingRoute = false;
+            window.__replayMode = false;
+            const icon = btnPlay.querySelector('i');
+            if (icon) icon.className = window._FA.PLAY;
+          } else {
             window.__isPlayingRoute = true;
             window.__replayMode = true;
             const icon = btnPlay.querySelector('i');
-            if (icon) {
-              icon.className = window._FA.REPLAY;
-            }
-            window.startCarMovement(ruta);
+            if (icon) icon.className = window._FA.REPLAY;
+            mostrarToast('Ruta iniciada con ' + algoName, 2200);
           }
-        } else {
-          console.warn("Eel no está listo o no tiene la función obtener_ruta.");
+        } catch (innerErr) {
+          console.warn('Error al iniciar movimiento automático', innerErr);
+          mostrarToast('Error: ' + (innerErr?.message || innerErr));
+        } finally {
+          closeToast?.();
+          enableControls();
         }
       } catch (err) {
         console.warn('Error al iniciar movimiento automático', err);

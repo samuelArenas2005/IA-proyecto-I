@@ -8,12 +8,18 @@ def busqueda_amplitud(city_map):
     cola = deque()
     cola.append(get_nodo_raiz(city_map))
     nPeople, _ = number_peoples(city_map)
-    
+    visitados = set()
     while True:
         if len(cola) == 0:
             return False, search_tree
         
         n = cola.popleft()
+        
+        if n.Status.get_values() in visitados:
+            continue
+        
+        visitados.add(n.Status.get_values())
+        
         if len(n.Path) >= 2:
             parent = n.Path[-2]
             current = n.Path[-1]

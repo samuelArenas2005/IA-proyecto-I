@@ -9,6 +9,7 @@ def busqueda_a_estrella(city_map):
     cola.append(get_nodo_raiz(city_map))
     nPeople, people_position = number_peoples(city_map)
     end_position = get_ubication_end(city_map)
+    visitados = set()
 
     while True:
         if len(cola) == 0:
@@ -21,6 +22,12 @@ def busqueda_a_estrella(city_map):
         
         cola.sort(key=prioridad)
         n = cola.pop(0)
+        
+        if n.Status.get_values() in visitados:
+            continue
+        
+        visitados.add(n.Status.get_values())
+        
         if len(n.Path) >= 2:
             parent = n.Path[-2]
             current = n.Path[-1]

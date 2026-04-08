@@ -69,7 +69,7 @@ def get_nodo_raiz(city_map):
     res = get_ubication_start(city_map)
     if res:
         startX, startY = res
-        statusNodoRaiz = Status(startX, startY, 0)
+        statusNodoRaiz = Status(startX, startY, 0, set())
         nodoRaiz = Nodo(statusNodoRaiz, [statusNodoRaiz.get_values()], {statusNodoRaiz.get_values()}, set(), 0, None)
         return nodoRaiz
     return None

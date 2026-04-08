@@ -9,14 +9,114 @@ function mostrarToast(msg, dur = 3000) {
   t._t = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// Toast persistente para operaciones largas
-function mostrarToastPersistente(msg) {
+// Control de cancelación
+let currentAbortController = null;
+let loadingTimeout = null;
+
+// Toast persistente para operaciones largas (con animación de carga)
+function mostrarToastPersistente(algoName) {
   const t = document.getElementById('toast');
-  document.getElementById('toast-msg').textContent = msg;
-  t.classList.add('show');
+  const msgEl = document.getElementById('toast-msg');
+  
+  // Crear estructura con spinner animado + botón cancelar
+  msgEl.innerHTML = `
+    <span class="toast-spinner"></span>
+    <span class="toast-content">
+      <span class="toast-text">Calculando ruta con <strong>${algoName}</strong></span>
+      <button class="toast-btn-cancel" id="btn-cancel-algo" title="Cancelar búsqueda" type="button">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </span>
+  `;
+  t.classList.add('show', 'toast-persistent');
   clearTimeout(t._t);
+  
+  // Configurar botón de cancelación
+  const btnCancel = document.getElementById('btn-cancel-algo');
+  if (btnCancel) {
+    btnCancel.addEventListener('click', cancelarCalculoAlgoritmo);
+  }
+  
+  // Auto-reactivar controles después de 30 segundos si aún está cargando
+  // (por si algo falla silenciosamente)
+  clearTimeout(loadingTimeout);
+  loadingTimeout = setTimeout(() => {
+    console.warn('[warning] Búsqueda tardando más de 30s, reactivando controles');
+    enableControls();
+  }, 30000);
+  
   // No desaparece automáticamente
-  return () => t.classList.remove('show'); // Retorna función para cerrar
+  return () => {
+    clearTimeout(loadingTimeout);
+    t.classList.remove('show', 'toast-persistent');
+    msgEl.textContent = '';
+  }; // Retorna función para cerrar
+}
+
+// Cancelar cálculo del algoritmo
+function cancelarCalculoAlgoritmo() {
+  if (window.eel && window.eel.cancelar_busqueda) {
+    window.eel.cancelar_busqueda()();
+  }
+  // Habilitar controles nuevamente
+  enableControls();
+  // Cerrar toast
+  const t = document.getElementById('toast');
+  t.classList.remove('show', 'toast-persistent');
+  mostrarToast('Búsqueda cancelada');
+}
+
+// Deshabilitar controles durante cálculo (excepto tema)
+function disableControls() {
+  const elementsToDisable = [
+    'select-algoritmo',
+    'select-mapa',
+    'btn-back',
+    'btn-play-route',
+    'btn-show-tree',
+    'btn-speed',
+    'btn-pov',
+    'btn-zoom-in',
+    'btn-zoom-out',
+    'btn-reset-cam',
+    'btn-time'
+  ];
+  
+  elementsToDisable.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = true;
+      el.style.opacity = '0.45';
+      el.style.cursor = 'not-allowed';
+      // NO usamos pointer-events: none para evitar congelación de UI
+    }
+  });
+}
+
+// Habilitar controles después de cálculo
+function enableControls() {
+  const elementsToEnable = [
+    'select-algoritmo',
+    'select-mapa',
+    'btn-back',
+    'btn-play-route',
+    'btn-show-tree',
+    'btn-speed',
+    'btn-pov',
+    'btn-zoom-in',
+    'btn-zoom-out',
+    'btn-reset-cam',
+    'btn-time'
+  ];
+  
+  elementsToEnable.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = false;
+      el.style.opacity = '1';
+      el.style.cursor = 'pointer';
+    }
+  });
 }
 
 // Python → JS
@@ -50,15 +150,20 @@ window._FA = { SUN: FA_SUN, MOON: FA_MOON, SUNRISE: FA_SUNRISE, SUNSET: FA_SUNSE
 // ── Cargar matriz de la ciudad y enviarla a map.js ────────────────────────────
 async function cargarMapa() {
   try {
+    console.log('[init] Iniciando carga de mapa...');
     const matrix = await eel.obtener_matriz_ciudad()();
+    console.log('[success] Matriz cargada correctamente');
     window.dispatchEvent(new CustomEvent('ciudad-lista', { detail: matrix }));
   } catch (e) {
-    console.error('Error al obtener matriz:', e);
-    mostrarToast('⚠️ Sin conexión con Python usando demo');
+    console.error('[error] Error al obtener matriz:', e);
+    mostrarToast('Error: No se puede conectar con el servidor');
   }
 }
 
-document.addEventListener('DOMContentLoaded', cargarMapa);
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[init] DOM cargado, iniciando aplicación...');
+  cargarMapa();
+});
 
 // ── Volver al menú ─────────────────────────────────────────────
 window.irAlMenu = function() {
@@ -80,6 +185,12 @@ window.changeMapSelect = async function() {
             
             document.getElementById('map-canvas').innerHTML = ''; // Limpiar previo
             window.dispatchEvent(new CustomEvent('ciudad-lista', { detail: matrix }));
+            
+            // Restablecer botón de play al cambiar mapa
+            if (window.resetWorld) {
+                window.resetWorld();
+            }
+            
             mostrarToast('Mapa cargado: ' + sel.value);
         } else {
             let errorMsg = res ? res.error : 'Desconocido';
@@ -94,30 +205,35 @@ window.changeMapSelect = async function() {
 window.changeAlgoSelect = async function() {
     const sel = document.getElementById('select-algoritmo');
     if (!sel || !window.eel) return;
+
+    const algoName = sel.options[sel.selectedIndex].text;
+
     try {
-        // Mostrar toast persistente de carga
-        const closeToast = mostrarToastPersistente('⏳ Calculando ruta óptima...');
-        
+        // Guardar selección en el backend sin ejecutar la ruta aún
         await window.eel.seleccionar_algoritmo(sel.value)();
-        const navAlgoTitle = document.getElementById('nav-algo-title');
-        if(navAlgoTitle) {
-            let titleText = sel.options[sel.selectedIndex].text;
-            if (sel.value === 'profundidad' && window.eel.obtener_orden_operadores) {
+    } catch (e) {
+        console.error('[error] No se pudo guardar el algoritmo seleccionado:', e);
+    }
+
+    const navAlgoTitle = document.getElementById('nav-algo-title');
+    if (navAlgoTitle) {
+        let titleText = algoName;
+        navAlgoTitle.textContent = titleText;
+
+        if (sel.value === 'profundidad' && window.eel && window.eel.obtener_orden_operadores) {
+            try {
                 const orden = await window.eel.obtener_orden_operadores()();
                 if (orden && orden.length) {
                     const mapOrd = { izquierda: 'Izq', abajo: 'Aba', derecha: 'Der', arriba: 'Arr' };
-                    titleText += ` [${orden.map(o => mapOrd[o] || o).join('-')}]`;
+                    navAlgoTitle.textContent = `${titleText} [${orden.map(o => mapOrd[o] || o).join('-')}]`;
                 }
+            } catch (err) {
+                console.warn('[warn] No se pudo obtener orden de operadores:', err);
             }
-            navAlgoTitle.textContent = titleText;
         }
-        
-        // Cerrar toast de carga y mostrar confirmación
-        closeToast();
-        mostrarToast('Algoritmo cambiado: ' + sel.options[sel.selectedIndex].text);
-    } catch(e) {
-        console.error(e);
     }
+
+    mostrarToast('Algoritmo seleccionado: ' + algoName, 2200);
 };
 
 // ── Toggles de los Paneles Laterales ─────────────────────────
@@ -161,9 +277,20 @@ window.toggleTreeExpand = function() {
 // Auto-seleccionar al dar refresh, reparando bug de algoritmos no reflejados
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(async () => { 
+        console.log('[init] Verificando disponibilidad de Eel...');
+        
+        if(!window.eel) {
+            console.error('[error] Eel no está disponible');
+            mostrarToast('Error: Conexión con servidor no disponible');
+            return;
+        }
+        
+        console.log('[success] Eel está disponible');
+        
         if(window.eel) {
             // Cargar Algoritmos
             try {
+                console.log('[init] Cargando lista de algoritmos...');
                 const algoEel = await window.eel.obtener_algoritmo()();
                 const algoSelect = document.getElementById('select-algoritmo');
                 if(algoEel && algoSelect) {
@@ -180,13 +307,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         navAlgoTitle.textContent = titleText;
                     }
+                    console.log('[success] Algoritmo cargado: ' + algoEel);
                 } else {
+                    console.warn('[warn] Algoritmo no disponible, usando default');
                     if(window.changeAlgoSelect) window.changeAlgoSelect(); // Set default
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error('[error] Error cargando algoritmo:', e);
+            }
             
             // Cargar Mapas dinámicamente
             try {
+                console.log('[init] Cargando lista de mapas...');
                 const mapList = await window.eel.obtener_lista_mapas()();
                 const selMap = document.getElementById('select-mapa');
                 if(selMap && mapList) {
@@ -197,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         opt.textContent = m;
                         selMap.appendChild(opt);
                     });
+                    console.log('[success] Mapas cargados: ' + mapList.length);
                     
                     // Ver cuál es el global actual
                     const currentMap = await window.eel.obtener_mapa_global()();
@@ -209,7 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         navMapTitle.textContent = selMap.options[selMap.selectedIndex]?.text || '...';
                     }
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error('[error] Error cargando mapas:', e);
+            }
         }
     }, 600);
 });

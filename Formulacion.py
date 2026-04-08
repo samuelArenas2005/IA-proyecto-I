@@ -1,11 +1,12 @@
 class Status:
-    def __init__(self,x,y,nPeoples):
+    def __init__(self,x,y,nPeoples, Peoples=None):
         self.x = x
         self.y = y
         self.nPeoples = nPeoples
+        self.Peoples = Peoples if Peoples is not None else set()
     
     def get_values(self):
-        return (self.x,self.y,self.nPeoples)
+        return (self.x, self.y, frozenset(self.Peoples))
 
 
 def is_goal(city_map, status, nPeople):
