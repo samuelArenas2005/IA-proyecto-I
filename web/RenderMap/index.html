@@ -84,6 +84,17 @@
             <option value="a_estrella">A*</option>
           </select>
         </div>
+        <div class="config-row">
+          <div class="config-row__top">
+            <div class="config-row__label">
+              <label for="toggle-visitados">Usar algoritmo mejorado</label>
+            </div>
+            <label class="switch">
+              <input id="toggle-visitados" type="checkbox" checked onchange="changeUseVisitados(this.checked)" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
         <div>
           <label style="font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; display: block; font-weight: 600;">ELEGIR MAPA</label>
           <select id="select-mapa" class="custom-select" style="width: 100%;" onchange="changeMapSelect()" title="Seleccionar Mapa">

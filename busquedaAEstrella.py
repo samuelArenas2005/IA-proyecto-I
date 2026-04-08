@@ -2,7 +2,7 @@ from Nodo import Nodo
 from Formulacion import is_goal, Status
 from Utilidades import number_peoples, get_nodo_raiz, get_ubication_end
 
-def busqueda_a_estrella(city_map):
+def busqueda_a_estrella(city_map, use_visitados=True):
     
     search_tree = []
     cola = []
@@ -10,6 +10,9 @@ def busqueda_a_estrella(city_map):
     nPeople, people_position = number_peoples(city_map)
     end_position = get_ubication_end(city_map)
     visitados = set()
+    
+    if use_visitados:
+        print("Visitados Activo") 
 
     while True:
         if len(cola) == 0:
@@ -23,10 +26,11 @@ def busqueda_a_estrella(city_map):
         cola.sort(key=prioridad)
         n = cola.pop(0)
         
-        if n.Status.get_values() in visitados:
+        if use_visitados and n.Status.get_values() in visitados:
             continue
         
-        visitados.add(n.Status.get_values())
+        if use_visitados:
+            visitados.add(n.Status.get_values())
         
         if len(n.Path) >= 2:
             parent = n.Path[-2]

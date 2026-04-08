@@ -236,6 +236,21 @@ window.changeAlgoSelect = async function() {
     mostrarToast('Algoritmo seleccionado: ' + algoName, 2200);
 };
 
+window.changeUseVisitados = async function(enabled) {
+    const checkbox = document.getElementById('toggle-visitados');
+    if (typeof enabled !== 'boolean' && checkbox) {
+        enabled = checkbox.checked;
+    }
+    if (!window.eel) return;
+    try {
+        await window.eel.seleccionar_uso_visitados(enabled)();
+        mostrarToast(enabled ? 'Algoritmo mejorado activado' : 'Algoritmo mejorado desactivado', 1800);
+    } catch (e) {
+        console.error('[error] No se pudo guardar el modo de visitados:', e);
+        mostrarToast('No se pudo cambiar la opción de algoritmo mejorado', 2200);
+    }
+};
+
 // ── Toggles de los Paneles Laterales ─────────────────────────
 window.toggleLegend = function() {
   const content = document.getElementById('legend-content');
@@ -344,6 +359,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch(e) {
                 console.error('[error] Error cargando mapas:', e);
+            }
+
+            try {
+                const visitadosSwitch = document.getElementById('toggle-visitados');
+                if (visitadosSwitch && window.eel && window.eel.obtener_uso_visitados) {
+                    const enabled = await window.eel.obtener_uso_visitados()();
+                    visitadosSwitch.checked = Boolean(enabled);
+                }
+            } catch (e) {
+                console.warn('[warn] No se pudo cargar el estado de algoritmo mejorado:', e);
             }
         }
     }, 600);

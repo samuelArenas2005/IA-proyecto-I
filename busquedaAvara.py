@@ -2,7 +2,7 @@ from Nodo import Nodo
 from Formulacion import is_goal, Status
 from Utilidades import number_peoples, get_nodo_raiz, get_ubication_end
 
-def busqueda_avara(city_map):
+def busqueda_avara(city_map, use_visitados=True):
     
     search_tree = []
     cola = []
@@ -11,6 +11,9 @@ def busqueda_avara(city_map):
     end_position = get_ubication_end(city_map)
     visitados = set()
     
+    if use_visitados:
+        print("Visitados Activo") 
+    
     while True:
         if len(cola) == 0:
             return False, search_tree
@@ -18,10 +21,11 @@ def busqueda_avara(city_map):
         cola.sort(key=lambda n: n.Heuristic if n.Heuristic is not None else float('inf'))
         n = cola.pop(0)
         
-        if n.Status.get_values() in visitados:
+        if use_visitados and n.Status.get_values() in visitados:
             continue
         
-        visitados.add(n.Status.get_values())
+        if use_visitados:
+            visitados.add(n.Status.get_values())
         
         if len(n.Path) >= 2:
             parent = n.Path[-2]

@@ -2,12 +2,15 @@ from Nodo import Nodo
 from Formulacion import is_goal, Status
 from Utilidades import number_peoples, get_nodo_raiz
 
-def busqueda_costo_uniforme(city_map):
+def busqueda_costo_uniforme(city_map, use_visitados=True):
     search_tree = []
     cola = []
     cola.append(get_nodo_raiz(city_map))
     nPeople, _ = number_peoples(city_map)
     visitados = set()
+    
+    if use_visitados:
+        print("Visitados Activo") 
     
     while True:
         if len(cola) == 0:
@@ -16,10 +19,11 @@ def busqueda_costo_uniforme(city_map):
         cola.sort(key=lambda x: x.Cost)
         n = cola.pop(0)
         
-        if n.Status.get_values() in visitados:
+        if use_visitados and n.Status.get_values() in visitados:
             continue
         
-        visitados.add(n.Status.get_values())
+        if use_visitados:
+            visitados.add(n.Status.get_values())
         
         if len(n.Path) >= 2:
             parent = n.Path[-2]

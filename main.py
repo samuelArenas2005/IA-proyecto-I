@@ -10,6 +10,7 @@ from busquedaAEstrella import busqueda_a_estrella
 ALGORITMO_SELECCIONADO = ""
 VEHICULO_SELECCIONADO = "carro"
 MAPA_SELECCIONADO = "mapa1.txt"
+USAR_ALGORITMO_MEJORADO = True
 
 # Orden por defecto de operadores para búsqueda en profundidad
 ORDEN_OPERADORES_PROFUNDIDAD = ['izquierda', 'abajo', 'derecha', 'arriba']
@@ -48,6 +49,19 @@ def seleccionar_algoritmo(tipo):
 def obtener_algoritmo():
     """Retorna el algoritmo seleccionado."""
     return ALGORITMO_SELECCIONADO
+
+@eel.expose
+def seleccionar_uso_visitados(valor):
+    """Actualiza si se usa el conjunto de visitados para optimizar la búsqueda."""
+    global USAR_ALGORITMO_MEJORADO
+    USAR_ALGORITMO_MEJORADO = bool(valor)
+    print(f"[backend] Uso visitados: {USAR_ALGORITMO_MEJORADO}")
+    return {"ok": True}
+
+@eel.expose
+def obtener_uso_visitados():
+    """Retorna si el modo mejorado está activado."""
+    return USAR_ALGORITMO_MEJORADO
 
 @eel.expose
 def cancelar_busqueda():
@@ -155,14 +169,15 @@ def obtener_search_tree():
 @eel.expose
 def obtener_ruta():
     """Calcula y retorna la ruta usando el algoritmo seleccionado."""
-    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE
+    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE, USAR_ALGORITMO_MEJORADO
     
+    use_visitados = USAR_ALGORITMO_MEJORADO
     algoritmos = {
-        "amplitud": busqueda_amplitud,
-        "costo_uniforme": busqueda_costo_uniforme,
-        "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD),
-        "avara": busqueda_avara,
-        "a_estrella": busqueda_a_estrella,
+        "amplitud": lambda cm: busqueda_amplitud(cm, use_visitados),
+        "costo_uniforme": lambda cm: busqueda_costo_uniforme(cm, use_visitados),
+        "profundidad": lambda cm: busqueda_profundidad(cm, ORDEN_OPERADORES_PROFUNDIDAD, use_visitados),
+        "avara": lambda cm: busqueda_avara(cm, use_visitados),
+        "a_estrella": lambda cm: busqueda_a_estrella(cm, use_visitados),
     }
     
     func = algoritmos.get(ALGORITMO_SELECCIONADO)

@@ -3,22 +3,27 @@ from Formulacion import is_goal, Status
 from collections import deque
 from Utilidades import get_ubication_start, number_peoples, get_nodo_raiz
 
-def busqueda_amplitud(city_map):
+def busqueda_amplitud(city_map, use_visitados=True):
     search_tree = []
     cola = deque()
     cola.append(get_nodo_raiz(city_map))
     nPeople, _ = number_peoples(city_map)
     visitados = set()
+    
+    if use_visitados:
+        print("Visitados Activo") 
+    
     while True:
         if len(cola) == 0:
             return False, search_tree
         
         n = cola.popleft()
         
-        if n.Status.get_values() in visitados:
+        if use_visitados and n.Status.get_values() in visitados:
             continue
         
-        visitados.add(n.Status.get_values())
+        if use_visitados:
+            visitados.add(n.Status.get_values())
         
         if len(n.Path) >= 2:
             parent = n.Path[-2]

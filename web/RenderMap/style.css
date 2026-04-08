@@ -143,10 +143,143 @@ html, body {
   color: var(--text);
 }
 
-body.light .custom-select {
-  background: rgba(255,255,255,0.9);
-  color: #1a1d40;
-  border-color: rgba(100,90,220,0.3);
+.config-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.config-row__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.config-row__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text);
+  font-weight: 700;
+  min-width: 0;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 46px;
+  height: 24px;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  cursor: help;
+}
+
+.tooltip__text {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 10px);
+  min-width: 230px;
+  max-width: 280px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 1000;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+}
+
+.tooltip:hover .tooltip__text,
+.tooltip:focus-within .tooltip__text {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.14);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.switch input:checked + .slider {
+  background: var(--accent);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+body.light .tooltip__text {
+  background: rgba(255,255,255,0.96);
+}
+
+body.light .tooltip {
+  color: rgba(51,65,85,0.82);
+}
+
+body.light .tooltip__text {
+  box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+}
+
+body.light .slider::before {
+  background: #fff;
+}
+
+body.light .slider {
+  background: rgba(100,90,220,0.2);
+}
+
+body.light .switch input:checked + .slider {
+  background: rgba(108,99,255,0.95);
 }
 body.light .custom-select option {
   background: #fff;
@@ -286,7 +419,7 @@ body.light .btn-theme {
   max-width: 90vw;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
   pointer-events: none; /* Allows passing clicks in empty space */
 }
 .right-panels-container > * {
