@@ -18,24 +18,17 @@ function mostrarToastPersistente(algoName) {
   const t = document.getElementById('toast');
   const msgEl = document.getElementById('toast-msg');
   
-  // Crear estructura con spinner animado + botón cancelar
   msgEl.innerHTML = `
     <span class="toast-spinner"></span>
     <span class="toast-content">
-      <span class="toast-text">Calculando ruta con <strong>${algoName}</strong></span>
-      <button class="toast-btn-cancel" id="btn-cancel-algo" title="Cancelar búsqueda" type="button">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <span class="toast-text">
+        <span class="toast-title">Calculando ruta con</span>
+        <span class="toast-subtitle">${algoName}</span>
+      </span>
     </span>
   `;
   t.classList.add('show', 'toast-persistent');
   clearTimeout(t._t);
-  
-  // Configurar botón de cancelación
-  const btnCancel = document.getElementById('btn-cancel-algo');
-  if (btnCancel) {
-    btnCancel.addEventListener('click', cancelarCalculoAlgoritmo);
-  }
   
   // Auto-reactivar controles después de 30 segundos si aún está cargando
   // (por si algo falla silenciosamente)
@@ -51,19 +44,6 @@ function mostrarToastPersistente(algoName) {
     t.classList.remove('show', 'toast-persistent');
     msgEl.textContent = '';
   }; // Retorna función para cerrar
-}
-
-// Cancelar cálculo del algoritmo
-function cancelarCalculoAlgoritmo() {
-  if (window.eel && window.eel.cancelar_busqueda) {
-    window.eel.cancelar_busqueda()();
-  }
-  // Habilitar controles nuevamente
-  enableControls();
-  // Cerrar toast
-  const t = document.getElementById('toast');
-  t.classList.remove('show', 'toast-persistent');
-  mostrarToast('Búsqueda cancelada');
 }
 
 // Deshabilitar controles durante cálculo (excepto tema)
@@ -287,6 +267,14 @@ window.toggleTreeExpand = function() {
     panel.classList.add('tree-sketch-panel--expanded');
     icon.classList.replace('fa-expand', 'fa-compress');
   }
+};
+
+window.toggleSwitchInfo = function() {
+  const infoText = document.getElementById('switch-info-text');
+  const toggleButton = document.getElementById('toggle-info-button');
+  if (!infoText || !toggleButton) return;
+  const isOpen = infoText.classList.toggle('open');
+  toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 };
 
 // Auto-seleccionar al dar refresh, reparando bug de algoritmos no reflejados
