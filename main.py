@@ -19,6 +19,7 @@ eel.init('web')  # Carpeta donde está el frontend
 
 CITY_MATRIX = inicializar_matriz()
 LAST_SEARCH_TREE = []
+LAST_ANALYTIC_REPORT = {}
 
 @eel.expose
 def cargar_mapa_desde_archivo(ruta):
@@ -146,9 +147,14 @@ def obtener_search_tree():
     return LAST_SEARCH_TREE
 
 @eel.expose
+def obtener_informe_analitico():
+    """Retorna el informe analítico de la última búsqueda ejecutada."""
+    return LAST_ANALYTIC_REPORT
+
+@eel.expose
 def obtener_ruta():
     """Calcula y retorna la ruta usando el algoritmo seleccionado."""
-    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE
+    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE, LAST_ANALYTIC_REPORT
     
     algoritmos = {
         "amplitud": busqueda_amplitud,
@@ -163,8 +169,26 @@ def obtener_ruta():
         print(f"[IA] Advertencia: Algoritmo '{ALGORITMO_SELECCIONADO}' no reconocido o no seleccionado.")
         return []
         
-    ruta, search_tree = limpiar_route_y_search_tree(func, CITY_MATRIX)
+    ruta, search_tree, metrics = limpiar_route_y_search_tree(func, CITY_MATRIX)
     LAST_SEARCH_TREE = search_tree
+    algo_name = ALGORITMO_SELECCIONADO
+    human_names = {
+        "amplitud": "Amplitud",
+        "costo_uniforme": "Costo Uniforme",
+        "profundidad": "Profundidad",
+        "avara": "Avara",
+        "a_estrella": "A*",
+    }
+    LAST_ANALYTIC_REPORT = {
+        "algorithm": algo_name,
+        "algorithm_label": human_names.get(algo_name, algo_name),
+        "has_solution": len(ruta) > 0,
+        "expanded_nodes": metrics.get("expanded_nodes") if metrics else None,
+        "max_depth": metrics.get("max_depth") if metrics else None,
+        "solution_depth": metrics.get("solution_depth") if metrics else None,
+        "compute_time_ms": metrics.get("compute_time_ms") if metrics else None,
+        "solution_cost": metrics.get("solution_cost") if metrics else None,
+    }
     return ruta
 
 

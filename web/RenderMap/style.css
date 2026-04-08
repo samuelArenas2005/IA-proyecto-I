@@ -367,6 +367,12 @@ body.light .btn-theme {
   border-color: var(--accent);
   box-shadow: var(--glow);
 }
+.map-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  border-color: var(--border);
+}
 /* Iconos Font Awesome dentro de los botones */
 .map-btn i {
   display: flex;
@@ -538,4 +544,243 @@ body.fade-out {
   color: var(--text);
   background: rgba(255,255,255,.05);
   cursor: pointer;
+}
+
+.report-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 10, 20, 0.34);
+  backdrop-filter: blur(4px);
+}
+
+.report-modal--open {
+  display: flex;
+}
+
+.report-modal__card {
+  width: min(360px, 88vw);
+  max-height: 68vh;
+  overflow: hidden;
+  background: linear-gradient(165deg, rgba(19, 26, 43, 0.72) 0%, rgba(15, 20, 34, 0.7) 52%, rgba(12, 17, 29, 0.72) 100%);
+  border: 1px solid rgba(164, 122, 255, 0.34);
+  border-radius: 18px;
+  box-shadow: 0 26px 48px rgba(2, 5, 15, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  padding: 12px;
+}
+
+.report-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.report-modal__header h3 {
+  font-size: 1.38rem;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+#btn-close-report-modal {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(185, 146, 255, 0.42);
+  background: rgba(149, 105, 236, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.report-modal__content {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #f2f4ff;
+  max-height: calc(68vh - 72px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.report-modal-empty {
+  color: #aab2cb;
+  padding: 8px 2px;
+}
+
+.report-modal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(187, 136, 255, 0.4);
+  background: rgba(144, 95, 240, 0.24);
+  color: #c89cff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.report-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.report-modal-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 88px;
+  padding: 10px 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(22,28,42,0.9) 0%, rgba(17,23,35,0.95) 100%);
+}
+
+.report-modal-card--wide {
+  min-height: 76px;
+  margin-bottom: 8px;
+}
+
+.report-modal-card--cost {
+  margin-top: 8px;
+}
+
+.report-modal-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(137, 93, 224, 0.2);
+  color: #b98dff;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.report-modal-icon--cyan {
+  background: rgba(31, 140, 190, 0.2);
+  color: #47c3ff;
+}
+
+.report-modal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.report-modal-label {
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.report-modal-label--caps {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.63rem;
+}
+
+.report-modal-value {
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.report-modal-value--big {
+  font-size: 1.65rem;
+}
+
+.report-modal-time {
+  margin-top: 8px;
+  min-height: 78px;
+  border-radius: 10px;
+  border: 1px solid rgba(187, 136, 255, 0.34);
+  background: linear-gradient(115deg, rgba(57, 38, 96, 0.95) 0%, rgba(45, 31, 79, 0.92) 100%);
+  padding: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.report-modal-time-value {
+  display: block;
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.report-modal-bars {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.report-modal-bars span {
+  width: 5px;
+  border-radius: 999px;
+  background: rgba(195, 136, 255, 0.52);
+}
+
+.report-modal-bars span:nth-child(1) { height: 10px; }
+.report-modal-bars span:nth-child(2) { height: 16px; }
+.report-modal-bars span:nth-child(3) { height: 24px; }
+.report-modal-bars span:nth-child(4) { height: 20px; }
+
+@media (max-width: 700px) {
+  .report-modal__header h3 { font-size: 1.45rem; }
+  .report-modal-grid { grid-template-columns: 1fr; }
+  .report-modal-value { font-size: 1.45rem; }
+  .report-modal-time-value { font-size: 1.75rem; }
+}
+
+.report-algo-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(108,99,255,0.15);
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.report-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.report-metric-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+}
+
+.report-metric-label {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.report-metric-value {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
