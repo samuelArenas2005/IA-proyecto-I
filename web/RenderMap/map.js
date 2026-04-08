@@ -13,7 +13,6 @@ const GRID   = 10;
 const OFFSET = (GRID * TILE) / 2;
 window.__lastSearchTree = [];
 window.__lastRoute = [];
-<<<<<<< HEAD
 window.__isPlayingRoute = false;
 window.__replayMode = false;
 
@@ -29,9 +28,7 @@ window.__sceneData = {
   startZ: 0,
   _lightMode: false
 };
-=======
 window.__pendingAnalyticReport = null;
->>>>>>> cfa4f10 (implement analytic report)
 
 // ── Paletas ───────────────────────────────────────────────────────────────────
 const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
@@ -1360,18 +1357,15 @@ setTimeout(() => {
   if (btnPlay) {
     btnPlay.addEventListener('click', async () => {
       try {
-<<<<<<< HEAD
         // Si ya estamos reproduciendo o estamos en modo replay tras finalizar, reiniciar
         if (window.__isPlayingRoute || window.__replayMode) {
           window.resetWorld?.();
           return;
         }
         
-=======
         const currentState = btnPlay.dataset.playState || 'ready';
-        // Si estaba en estado revert, al hacer click volvemos a 'ready' y relanzamos
+        // Pasar a estado 'running' visualmente
         setPlayState('running');
->>>>>>> cfa4f10 (implement analytic report)
         if (window.eel && window.eel.obtener_ruta) {
           const algoSel = document.getElementById('select-algoritmo');
           if (algoSel && window.eel.seleccionar_algoritmo) {
