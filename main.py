@@ -65,6 +65,13 @@ def obtener_uso_visitados():
     return USAR_ALGORITMO_MEJORADO
 
 @eel.expose
+def cancelar_busqueda():
+    """Cancela la búsqueda actual (llamada desde el frontend)."""
+    global ALGORITMO_SELECCIONADO
+    print(f"[backend] Búsqueda cancelada para: {ALGORITMO_SELECCIONADO}")
+    return {"ok": True}
+
+@eel.expose
 def seleccionar_mapa_global(mapa):
     """Actualiza el mapa seleccionado antes de renderizar."""
     global MAPA_SELECCIONADO, CITY_MATRIX

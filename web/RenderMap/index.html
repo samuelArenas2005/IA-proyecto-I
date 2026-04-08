@@ -89,21 +89,10 @@
             <div class="config-row__label">
               <label for="toggle-visitados">Usar algoritmo mejorado</label>
             </div>
-            <div class="config-row__actions">
-              <label class="switch">
-                <input id="toggle-visitados" type="checkbox" checked onchange="changeUseVisitados(this.checked)" />
-                <span class="slider"></span>
-              </label>
-              <button id="toggle-info-button" class="info-toggle-btn" type="button" aria-expanded="false" onclick="toggleSwitchInfo()" title="Mostrar información adicional">
-                <i class="fa-solid fa-chevron-down"></i>
-              </button>
-            </div>
-          </div>
-          <div id="switch-info-text" class="switch-info-text">
-            Optimizar el algoritmo implica que ademas de evitar ciclos (que lo hace por defecto) 
-            en una rama, evita abrir un 
-            mismo estado ya expandido en otra subrama,
-            de modo que no se revisan nodos del mismo estado varias veces.
+            <label class="switch">
+              <input id="toggle-visitados" type="checkbox" checked onchange="changeUseVisitados(this.checked)" />
+              <span class="slider"></span>
+            </label>
           </div>
         </div>
         <div>
