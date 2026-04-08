@@ -28,6 +28,7 @@ window.__sceneData = {
   startZ: 0,
   _lightMode: false
 };
+window.__pendingAnalyticReport = null;
 
 // ── Paletas ───────────────────────────────────────────────────────────────────
 const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
@@ -118,6 +119,75 @@ function m(geometry, color, opts = {}) {
 }
 function em(geometry, color, intensity = .8) {
   return m(geometry, color, { emissive: color, emissiveIntensity: intensity });
+}
+
+function formatReportHtml(report) {
+  if (!report || Object.keys(report).length === 0) {
+    return 'Sin datos actuales';
+  }
+  const timeMs = typeof report.compute_time_ms === 'number'
+    ? `${report.compute_time_ms.toFixed(3)} ms`
+    : '—';
+  const lines = [
+    `<div class="report-algo-chip">Algoritmo: ${report.algorithm_label || report.algorithm || '—'}</div>`,
+    `<div class="report-metrics-grid">`,
+    `<div class="report-metric-card"><span class="report-metric-label">Nodos expandidos</span><span class="report-metric-value">${report.expanded_nodes ?? '—'}</span></div>`,
+    `<div class="report-metric-card"><span class="report-metric-label">Profundidad del árbol</span><span class="report-metric-value">${report.max_depth ?? '—'}</span></div>`,
+    `<div class="report-metric-card"><span class="report-metric-label">Profundidad de la solución</span><span class="report-metric-value">${report.solution_depth ?? '—'}</span></div>`,
+    `<div class="report-metric-card"><span class="report-metric-label">Tiempo de cómputo</span><span class="report-metric-value">${timeMs}</span></div>`
+  ];
+  if (report.solution_cost !== null && report.solution_cost !== undefined) {
+    lines.push(`<div class="report-metric-card"><span class="report-metric-label">Costo de la solución</span><span class="report-metric-value">${report.solution_cost}</span></div>`);
+  }
+  lines.push(`</div>`);
+  return lines.join('');
+}
+
+function formatReportModalHtml(report) {
+  if (!report || Object.keys(report).length === 0) {
+    return '<div class="report-modal-empty">Sin datos actuales</div>';
+  }
+  const algo = report.algorithm_label || report.algorithm || '—';
+  const timeMs = typeof report.compute_time_ms === 'number'
+    ? `${report.compute_time_ms.toFixed(3)} ms`
+    : '—';
+
+  const blocks = [
+    `<div class="report-modal-chip"><i class="fa-solid fa-laptop-code"></i><span>Algoritmo: ${algo}</span></div>`,
+    `<div class="report-modal-card report-modal-card--wide">`,
+    `<div class="report-modal-icon"><i class="fa-solid fa-diagram-project"></i></div>`,
+    `<div class="report-modal-main"><span class="report-modal-label">Cantidad de nodos expandidos</span><span class="report-modal-value report-modal-value--big">${report.expanded_nodes ?? '—'}</span></div>`,
+    `</div>`,
+    `<div class="report-modal-grid">`,
+    `<div class="report-modal-card"><div class="report-modal-icon report-modal-icon--cyan"><i class="fa-solid fa-arrows-up-down"></i></div><div class="report-modal-main"><span class="report-modal-label report-modal-label--caps">Profundidad del árbol</span><span class="report-modal-value">${report.max_depth ?? '—'}</span></div></div>`,
+    `<div class="report-modal-card"><div class="report-modal-icon"><i class="fa-solid fa-check"></i></div><div class="report-modal-main"><span class="report-modal-label report-modal-label--caps">Profundidad de la solución</span><span class="report-modal-value">${report.solution_depth ?? '—'}</span></div></div>`,
+    `</div>`,
+    `<div class="report-modal-time">`,
+    `<div><span class="report-modal-label report-modal-label--caps">Tiempo de cómputo</span><span class="report-modal-time-value">${timeMs}</span></div>`,
+    `<div class="report-modal-bars"><span></span><span></span><span></span><span></span></div>`,
+    `</div>`
+  ];
+
+  if (report.solution_cost !== null && report.solution_cost !== undefined) {
+    blocks.push(`<div class="report-modal-card report-modal-card--wide report-modal-card--cost"><div class="report-modal-icon"><i class="fa-solid fa-coins"></i></div><div class="report-modal-main"><span class="report-modal-label">Costo de la solución</span><span class="report-modal-value">${report.solution_cost}</span></div></div>`);
+  }
+
+  return blocks.join('');
+}
+
+function renderAnalyticReport(report) {
+  const informePanel = document.getElementById('informe-panel');
+  const informeContent = document.getElementById('informe-content');
+  if (informePanel) informePanel.style.display = 'block';
+  if (informeContent) informeContent.innerHTML = formatReportHtml(report);
+}
+
+function openReportModal(report) {
+  const modal = document.getElementById('report-modal');
+  const content = document.getElementById('report-modal-content');
+  if (!modal || !content) return;
+  content.innerHTML = formatReportModalHtml(report);
+  modal.classList.add('report-modal--open');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -584,6 +654,7 @@ function buildCity(matrix) {
   let moveProgress = 0;
   let isMoving = false;
   let isPaused = false;
+  let finalReportShown = false;
   let speedBtnUI = document.getElementById('btn-speed');
   let speedMultiplier = speedBtnUI ? parseFloat(speedBtnUI.dataset.speed || 1.0) : 1.0; 
   let treeAnimFrame = null;
@@ -686,6 +757,7 @@ function buildCity(matrix) {
     moveProgress = 0;
     isMoving = true;
     isPaused = false;
+    finalReportShown = false;
     
     // Snap rápido a posición de inicio
     let r0 = path[0][0], c0 = path[0][1];
@@ -1016,6 +1088,20 @@ function buildCity(matrix) {
       } else {
         if (isMoving) {
           isMoving = false;
+          if (!finalReportShown) {
+            finalReportShown = true;
+            renderAnalyticReport(window.__pendingAnalyticReport);
+            openReportModal(window.__pendingAnalyticReport);
+          }
+          // Al finalizar la animación, habilitar botón y mostrar icono de revertir
+          (function enableRevert() {
+            const btn = document.getElementById('btn-play-route');
+            if (!btn) return;
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fa-solid fa-rotate-left';
+            btn.dataset.playState = 'revert';
+            btn.removeAttribute('disabled');
+          })();
           
           // Mantener estado replay al terminar el recorrido
           window.__isPlayingRoute = false;
@@ -1246,6 +1332,42 @@ window.resetWorld = function() {
 // Listener para el botón de play
 setTimeout(() => {
   const btnPlay = document.getElementById('btn-play-route');
+  const reportModal = document.getElementById('report-modal');
+  const btnCloseReportModal = document.getElementById('btn-close-report-modal');
+  const playIconReady = 'fa-solid fa-play';
+  const playIconRunning = 'fa-solid fa-rotate fa-spin';
+  const playIconRevert = 'fa-solid fa-rotate-left';
+
+  function setPlayState(state) {
+    // state: 'ready' | 'running' | 'revert'
+    if (!btnPlay) return;
+    const icon = btnPlay.querySelector('i');
+    if (!icon) return;
+    btnPlay.dataset.playState = state;
+    if (state === 'running') {
+      icon.className = playIconRunning;
+      btnPlay.setAttribute('disabled', 'true');
+    } else if (state === 'revert') {
+      icon.className = playIconRevert;
+      btnPlay.removeAttribute('disabled');
+    } else {
+      icon.className = playIconReady;
+      btnPlay.removeAttribute('disabled');
+    }
+  }
+
+  if (reportModal) {
+    if (btnCloseReportModal) {
+      btnCloseReportModal.addEventListener('click', () => {
+        reportModal.classList.remove('report-modal--open');
+      });
+    }
+    reportModal.addEventListener('click', (e) => {
+      if (e.target === reportModal) {
+        reportModal.classList.remove('report-modal--open');
+      }
+    });
+  }
   if (btnPlay) {
     btnPlay.addEventListener('click', async () => {
       try {
@@ -1255,6 +1377,7 @@ setTimeout(() => {
           return;
         }
         
+<<<<<<< HEAD
         const algoSel = document.getElementById('select-algoritmo');
         if (!algoSel || !algoSel.value) {
           mostrarToast('Selecciona un algoritmo antes de iniciar la ruta');
@@ -1267,6 +1390,14 @@ setTimeout(() => {
 
         try {
           if (window.eel && window.eel.seleccionar_algoritmo) {
+=======
+        const currentState = btnPlay.dataset.playState || 'ready';
+        // Pasar a estado 'running' visualmente
+        setPlayState('running');
+        if (window.eel && window.eel.obtener_ruta) {
+          const algoSel = document.getElementById('select-algoritmo');
+          if (algoSel && window.eel.seleccionar_algoritmo) {
+>>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
              await window.eel.seleccionar_algoritmo(algoSel.value)();
           }
           if (!window.eel || !window.eel.obtener_ruta) {
@@ -1274,6 +1405,14 @@ setTimeout(() => {
           }
           const ruta = await window.eel.obtener_ruta()();
           window.__lastRoute = Array.isArray(ruta) ? ruta : [];
+          if (window.eel.obtener_informe_analitico) {
+            try {
+              window.__pendingAnalyticReport = await window.eel.obtener_informe_analitico()();
+            } catch (reportErr) {
+              console.warn('No se pudo obtener informe analítico', reportErr);
+              window.__pendingAnalyticReport = null;
+            }
+          }
           if (window.eel.obtener_search_tree) {
             try {
               window.__lastSearchTree = await window.eel.obtener_search_tree()();
@@ -1282,6 +1421,7 @@ setTimeout(() => {
               window.__lastSearchTree = [];
             }
           }
+<<<<<<< HEAD
           const started = window.startCarMovement ? window.startCarMovement(ruta) : false;
           if (!started) {
             mostrarToast('No se encontró una ruta válida o no se pudo iniciar el movimiento');
@@ -1290,21 +1430,38 @@ setTimeout(() => {
             const icon = btnPlay.querySelector('i');
             if (icon) icon.className = window._FA.PLAY;
           } else {
+=======
+          if (!Array.isArray(ruta) || ruta.length < 2) {
+            renderAnalyticReport(window.__pendingAnalyticReport);
+            openReportModal(window.__pendingAnalyticReport);
+            setPlayState('revert');
+            return;
+          }
+          if (window.startCarMovement) {
+            // Cambiar ícono a replay cuando se inicia
+>>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
             window.__isPlayingRoute = true;
             window.__replayMode = true;
             const icon = btnPlay.querySelector('i');
             if (icon) icon.className = window._FA.REPLAY;
             mostrarToast('Ruta iniciada con ' + algoName, 2200);
           }
+<<<<<<< HEAD
         } catch (innerErr) {
           console.warn('Error al iniciar movimiento automático', innerErr);
           mostrarToast('Error: ' + (innerErr?.message || innerErr));
         } finally {
           closeToast?.();
           enableControls();
+=======
+        } else {
+          console.warn("Eel no está listo o no tiene la función obtener_ruta.");
+          setPlayState('ready');
+>>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
         }
       } catch (err) {
         console.warn('Error al iniciar movimiento automático', err);
+        setPlayState('ready');
       }
     });
   }

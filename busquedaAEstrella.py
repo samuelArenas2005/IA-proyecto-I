@@ -1,6 +1,7 @@
 from Nodo import Nodo
 from Formulacion import is_goal, Status
 from Utilidades import number_peoples, get_nodo_raiz, get_ubication_end
+import time
 
 def busqueda_a_estrella(city_map, use_visitados=True):
     
@@ -13,10 +14,22 @@ def busqueda_a_estrella(city_map, use_visitados=True):
     
     if use_visitados:
         print("Visitados Activo") 
+        
+    expanded_nodes = 0
+    max_depth = 0
+    started = time.perf_counter()
 
     while True:
         if len(cola) == 0:
-            return False, search_tree
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            metrics = {
+                "expanded_nodes": expanded_nodes,
+                "max_depth": max_depth,
+                "solution_depth": None,
+                "compute_time_ms": elapsed_ms,
+                "solution_cost": None,
+            }
+            return False, search_tree, metrics
 
         def prioridad(n):
             if n.Heuristic is None:
@@ -32,6 +45,10 @@ def busqueda_a_estrella(city_map, use_visitados=True):
         if use_visitados:
             visitados.add(n.Status.get_values())
         
+        expanded_nodes += 1
+        current_depth = len(n.Path) - 1
+        if current_depth > max_depth:
+            max_depth = current_depth
         if len(n.Path) >= 2:
             parent = n.Path[-2]
             current = n.Path[-1]
@@ -41,7 +58,15 @@ def busqueda_a_estrella(city_map, use_visitados=True):
             search_tree.append((current[0], current[1], current[0], current[1]))
         
         if is_goal(city_map, n.Status, nPeople):
-            return n, search_tree
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            metrics = {
+                "expanded_nodes": expanded_nodes,
+                "max_depth": max_depth,
+                "solution_depth": len(n.Path) - 1,
+                "compute_time_ms": elapsed_ms,
+                "solution_cost": n.Cost,
+            }
+            return n, search_tree, metrics
         
         hijos = n.expandir_informada(city_map, people_position, end_position)
         cola.extend(hijos)
@@ -51,7 +76,7 @@ if __name__ == "__main__":
     
     matriz_real = inicializar_matriz()
     
-    nodoMeta, search_tree = busqueda_a_estrella(matriz_real)
+    nodoMeta, search_tree, _ = busqueda_a_estrella(matriz_real)
     if nodoMeta:
         print(f"Éxito (A*). Costo: {nodoMeta.Cost}")
         print(f"Camino: {nodoMeta.Path}")
