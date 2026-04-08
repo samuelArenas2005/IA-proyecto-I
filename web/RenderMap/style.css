@@ -436,10 +436,17 @@ body.light .btn-theme {
   pointer-events: none;
   transition: opacity .3s, transform .3s;
   white-space: nowrap;
+  backdrop-filter: blur(12px);
 }
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+body.light .toast {
+  background: rgba(255,255,255,.95);
+  border-color: rgba(100,90,220,.3);
+  color: #1a1d40;
 }
 
 /* ── Botón volver al menú ────────────────────── */

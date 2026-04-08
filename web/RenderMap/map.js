@@ -13,6 +13,21 @@ const GRID   = 10;
 const OFFSET = (GRID * TILE) / 2;
 window.__lastSearchTree = [];
 window.__lastRoute = [];
+window.__isPlayingRoute = false;
+window.__replayMode = false;
+
+// Referencias globales para reinicio eficiente
+window.__sceneData = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  playerCar: null,
+  tilesGrid: null,
+  startX: 0,
+  startZ: 0,
+  _lightMode: false
+};
 
 // ── Paletas ───────────────────────────────────────────────────────────────────
 const BUILDING_PALETTE = [0x7c6fff, 0x5c8fff, 0x3fb8f5, 0x9a63ff, 0x4c7cfa, 0x38d9a9];
@@ -20,9 +35,9 @@ const CAR_PALETTE      = [0xff6b6b, 0xffa94d, 0x69db7c, 0x74c0fc, 0xf783ac];
 const ROAD_COLOR       = 0x343a50;
 const ROAD_MARK        = 0xffd43b;
 const SIDEWALK_COLOR   = 0x464d6a;
-const GROUND_COLOR     = 0x1c1f38;
+const GROUND_COLOR     = 0x121c2f;
 
-// ── Posiciones de parque (coordenadas fijas, máx 2 en todo el mapa) ────────────
+// ── Posiciones de parque (coordenadas fijas, máx 2 en todo el mapa ────────────
 // Cambia estos valores para mover los parques a otras celdas con valor 1
 const PARK_POSITIONS = new Set(['1,1', '6,8']);
 function isPark(row, col) { return PARK_POSITIONS.has(`${row},${col}`); }
@@ -325,15 +340,18 @@ function tile5() {
 //  ESCENA
 // ──────────────────────────────────────────────────────────────────────────────
 function buildCity(matrix) {
+  // Guardar matriz para poder reiniciar
+  window.__lastMatrix = matrix;
+  
   const container = document.getElementById('map-canvas');
   const W = container.clientWidth;
   const H = container.clientHeight;
 
   // ── Escena ──
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a1d33);
+  scene.background = new THREE.Color(0x101c2b);
   // niebla muy suave, solo para profundidad
-  scene.fog = new THREE.Fog(0x1a1d33, 60, 130);
+  scene.fog = new THREE.Fog(0x101c2b, 60, 130);
 
   // ── Cámara ortográfica isométrica ──
   const aspect = W / H;
@@ -367,6 +385,12 @@ function buildCity(matrix) {
   controls.maxZoom = 4;
   controls.maxPolarAngle = Math.PI / 2.1;
   controls.update();
+
+  // Guardar referencias globales
+  window.__sceneData.scene = scene;
+  window.__sceneData.camera = camera;
+  window.__sceneData.renderer = renderer;
+  window.__sceneData.controls = controls;
 
   // ── Cámara POV (sigue al vehículo) ──
   // Estado: 0=vista lejana, 1=POV (dentro del carro), 2=POV alejamiento 1, 3=POV alejamiento 2
@@ -480,6 +504,11 @@ function buildCity(matrix) {
     }
   }
 
+  // Guardar tilesGrid y posiciones iniciales
+  window.__sceneData.tilesGrid = tilesGrid;
+  window.__sceneData.startX = startX;
+  window.__sceneData.startZ = startZ;
+
   // ── Carro Fijo del Jugador (Independiente) ──
   let playerCar;
   const gltfLoader = new GLTFLoader();
@@ -542,6 +571,9 @@ function buildCity(matrix) {
         playerCar.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     }
     scene.add(playerCar);
+    
+    // Guardar referencia del playerCar
+    window.__sceneData.playerCar = playerCar;
   }
   
   setupPlayerVehicle();
@@ -555,6 +587,14 @@ function buildCity(matrix) {
   let speedBtnUI = document.getElementById('btn-speed');
   let speedMultiplier = speedBtnUI ? parseFloat(speedBtnUI.dataset.speed || 1.0) : 1.0; 
   let treeAnimFrame = null;
+
+  window.__sceneData.stopMovement = () => {
+    isMoving = false;
+    isPaused = false;
+    currentPath = [];
+    pathIndex = 0;
+    moveProgress = 0;
+  };
 
   function checkAndAnimatePerson(row, col) {
       if (matrix[row] && matrix[row][col] === 4) {
@@ -874,16 +914,22 @@ function buildCity(matrix) {
 
   // ── Cambio de tema claro/oscuro ─────────────────────────────────────────
   window.setMapTheme = (lightOn) => {
+    window.__sceneData._lightMode = lightOn;
     isLightMode = lightOn;
+
     // Fondo y niebla
     applyTime(currentTimeIdx);
+
     // Suelo
     gndMat.color.setHex(lightOn ? 0xd4d8ec : GROUND_COLOR);
+
     // Grid
     const gridColor = lightOn ? 0xb0b8d8 : 0x252840;
-    grid.material.forEach
-      ? grid.material.forEach(m => m.color?.setHex(gridColor))
-      : (grid.material.color?.setHex(gridColor));
+    if (Array.isArray(grid.material)) {
+      grid.material.forEach(m => m.color?.setHex(gridColor));
+    } else {
+      grid.material.color?.setHex(gridColor);
+    }
   };
 
   // Aplicar estado inicial (día)
@@ -956,6 +1002,10 @@ function buildCity(matrix) {
       } else {
         if (isMoving) {
           isMoving = false;
+          
+          // Mantener estado replay al terminar el recorrido
+          window.__isPlayingRoute = false;
+          window.__replayMode = true;
           
           // Confeti si la meta es 5
           const endP = currentPath[currentPath.length - 1];
@@ -1138,12 +1188,59 @@ window.addEventListener('ciudad-lista', async e => {
   buildCity(e.detail);
 });
 
+// Función para reiniciar el mundo sin tocar la cámara
+window.resetWorld = function() {
+  if (!window.__sceneData || !window.__sceneData.scene) return;
+  window.__isPlayingRoute = false;
+  window.__sceneData.stopMovement?.();
+
+  // Restablecer posición inicial del vehículo
+  const playerCar = window.__sceneData.playerCar;
+  if (playerCar) {
+    playerCar.position.set(window.__sceneData.startX, 0, window.__sceneData.startZ);
+    playerCar.rotation.set(0, 0, 0);
+    playerCar.updateMatrix();
+  }
+
+  // Resetear estado de semáforos y personas sin reconstruir la cámara
+  window.__sceneData.scene.traverse(o => {
+    if (o.userData && o.userData.trafficLight) {
+      const tl = o.userData.trafficLight;
+      tl.isRed = false;
+      tl.lightMat.color.setHex(0x00ff00);
+      tl.lightMat.emissive.setHex(0x00ff00);
+    }
+    if (o.name === 'person') {
+      o.userData.picked = false;
+      o.visible = true;
+      o.position.y = 0;
+      o.rotation.y = 0;
+      o.scale.set(1, 1, 1);
+    }
+  });
+
+  // Restaurar botón a Play cuando se reinicia desde el estado activo
+  const btnPlay = document.getElementById('btn-play-route');
+  if (btnPlay) {
+    const icon = btnPlay.querySelector('i');
+    if (icon) icon.className = window._FA.PLAY;
+  }
+  window.__replayMode = false;
+  window.__isPlayingRoute = false;
+};
+
 // Listener para el botón de play
 setTimeout(() => {
   const btnPlay = document.getElementById('btn-play-route');
   if (btnPlay) {
     btnPlay.addEventListener('click', async () => {
       try {
+        // Si ya estamos reproduciendo o estamos en modo replay tras finalizar, reiniciar
+        if (window.__isPlayingRoute || window.__replayMode) {
+          window.resetWorld?.();
+          return;
+        }
+        
         if (window.eel && window.eel.obtener_ruta) {
           const algoSel = document.getElementById('select-algoritmo');
           if (algoSel && window.eel.seleccionar_algoritmo) {
@@ -1160,6 +1257,13 @@ setTimeout(() => {
             }
           }
           if (window.startCarMovement) {
+            // Cambiar ícono a replay cuando se inicia
+            window.__isPlayingRoute = true;
+            window.__replayMode = true;
+            const icon = btnPlay.querySelector('i');
+            if (icon) {
+              icon.className = window._FA.REPLAY;
+            }
             window.startCarMovement(ruta);
           }
         } else {

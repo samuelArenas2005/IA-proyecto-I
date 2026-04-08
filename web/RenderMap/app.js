@@ -9,6 +9,16 @@ function mostrarToast(msg, dur = 3000) {
   t._t = setTimeout(() => t.classList.remove('show'), dur);
 }
 
+// Toast persistente para operaciones largas
+function mostrarToastPersistente(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  // No desaparece automáticamente
+  return () => t.classList.remove('show'); // Retorna función para cerrar
+}
+
 // Python → JS
 eel.expose(mostrar_notificacion);
 function mostrar_notificacion(msg) { mostrarToast(msg, 4000); }
@@ -18,6 +28,8 @@ const FA_SUN     = 'fa-solid fa-sun';
 const FA_MOON    = 'fa-solid fa-moon';
 const FA_SUNRISE = 'fa-solid fa-cloud-sun';
 const FA_SUNSET  = 'fa-solid fa-cloud-moon';
+const FA_PLAY    = 'fa-solid fa-play';
+const FA_REPLAY  = 'fa-solid fa-rotate-right';
 
 // ── Toggle tema claro / oscuro ─────────────────────────────────
 let _lightMode = false;
@@ -34,7 +46,7 @@ window.toggleTheme = function () {
 };
 
 // Exponer para map.js
-window._FA = { SUN: FA_SUN, MOON: FA_MOON, SUNRISE: FA_SUNRISE, SUNSET: FA_SUNSET };
+window._FA = { SUN: FA_SUN, MOON: FA_MOON, SUNRISE: FA_SUNRISE, SUNSET: FA_SUNSET, PLAY: FA_PLAY, REPLAY: FA_REPLAY };
 // ── Cargar matriz de la ciudad y enviarla a map.js ────────────────────────────
 async function cargarMapa() {
   try {
@@ -83,6 +95,9 @@ window.changeAlgoSelect = async function() {
     const sel = document.getElementById('select-algoritmo');
     if (!sel || !window.eel) return;
     try {
+        // Mostrar toast persistente de carga
+        const closeToast = mostrarToastPersistente('⏳ Calculando ruta óptima...');
+        
         await window.eel.seleccionar_algoritmo(sel.value)();
         const navAlgoTitle = document.getElementById('nav-algo-title');
         if(navAlgoTitle) {
@@ -96,6 +111,9 @@ window.changeAlgoSelect = async function() {
             }
             navAlgoTitle.textContent = titleText;
         }
+        
+        // Cerrar toast de carga y mostrar confirmación
+        closeToast();
         mostrarToast('Algoritmo cambiado: ' + sel.options[sel.selectedIndex].text);
     } catch(e) {
         console.error(e);
