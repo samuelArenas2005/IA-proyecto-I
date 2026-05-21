@@ -52,8 +52,13 @@ def is_locked_right(city_map,posX,posY):
     
     return False
 
-def is_cycle(status, route):
-    return status in route
+def is_cycle(status, node):
+    current = node
+    while current is not None:
+        if current.Status.get_values() == status:
+            return True
+        current = current.Parent
+    return False
 
 def add_person(city_map, posX, posY, people):
     if city_map[posX][posY] == 4 and (posX, posY) not in people:
