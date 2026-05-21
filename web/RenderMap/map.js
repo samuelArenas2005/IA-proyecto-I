@@ -1376,17 +1376,12 @@ setTimeout(() => {
           window.resetWorld?.();
           return;
         }
-        
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        const currentState = btnPlay.dataset.playState || 'ready';
-        // Pasar a estado 'running' visualmente
+
         setPlayState('running');
->>>>>>> recovered-0a6038e
         const algoSel = document.getElementById('select-algoritmo');
         if (!algoSel || !algoSel.value) {
           mostrarToast('Selecciona un algoritmo antes de iniciar la ruta');
+          setPlayState('ready');
           return;
         }
 
@@ -1396,18 +1391,7 @@ setTimeout(() => {
 
         try {
           if (window.eel && window.eel.seleccionar_algoritmo) {
-<<<<<<< HEAD
-=======
-        const currentState = btnPlay.dataset.playState || 'ready';
-        // Pasar a estado 'running' visualmente
-        setPlayState('running');
-        if (window.eel && window.eel.obtener_ruta) {
-          const algoSel = document.getElementById('select-algoritmo');
-          if (algoSel && window.eel.seleccionar_algoritmo) {
->>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
-=======
->>>>>>> recovered-0a6038e
-             await window.eel.seleccionar_algoritmo(algoSel.value)();
+            await window.eel.seleccionar_algoritmo(algoSel.value)();
           }
           if (!window.eel || !window.eel.obtener_ruta) {
             throw new Error('Backend no disponible');
@@ -1430,16 +1414,12 @@ setTimeout(() => {
               window.__lastSearchTree = [];
             }
           }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
           if (!Array.isArray(ruta) || ruta.length < 2) {
             renderAnalyticReport(window.__pendingAnalyticReport);
             openReportModal(window.__pendingAnalyticReport);
             setPlayState('revert');
             return;
           }
->>>>>>> recovered-0a6038e
           const started = window.startCarMovement ? window.startCarMovement(ruta) : false;
           if (!started) {
             mostrarToast('No se encontró una ruta válida o no se pudo iniciar el movimiento');
@@ -1447,45 +1427,20 @@ setTimeout(() => {
             window.__replayMode = false;
             const icon = btnPlay.querySelector('i');
             if (icon) icon.className = window._FA.PLAY;
+            setPlayState('ready');
           } else {
-<<<<<<< HEAD
-=======
-          if (!Array.isArray(ruta) || ruta.length < 2) {
-            renderAnalyticReport(window.__pendingAnalyticReport);
-            openReportModal(window.__pendingAnalyticReport);
-            setPlayState('revert');
-            return;
-          }
-          if (window.startCarMovement) {
-            // Cambiar ícono a replay cuando se inicia
->>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
-=======
->>>>>>> recovered-0a6038e
             window.__isPlayingRoute = true;
             window.__replayMode = true;
             const icon = btnPlay.querySelector('i');
             if (icon) icon.className = window._FA.REPLAY;
             mostrarToast('Ruta iniciada con ' + algoName, 2200);
           }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> recovered-0a6038e
         } catch (innerErr) {
           console.warn('Error al iniciar movimiento automático', innerErr);
           mostrarToast('Error: ' + (innerErr?.message || innerErr));
         } finally {
           closeToast?.();
           enableControls();
-<<<<<<< HEAD
-=======
-        } else {
-          console.warn("Eel no está listo o no tiene la función obtener_ruta.");
-          setPlayState('ready');
->>>>>>> d31efcf4c87ee08c939596bb90a9e6b1d594f4c8
-=======
-          setPlayState('ready');
->>>>>>> recovered-0a6038e
         }
       } catch (err) {
         console.warn('Error al iniciar movimiento automático', err);
