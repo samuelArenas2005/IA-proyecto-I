@@ -10,8 +10,6 @@ def busqueda_profundidad(city_map, orden_operadores, use_visitados=True):
     nPeople, _ = number_peoples(city_map)
     visitados = set()
     
-    if use_visitados:
-        print("Visitados Activo") 
     expanded_nodes = 0
     max_depth = 0
     started = time.perf_counter()
@@ -36,15 +34,16 @@ def busqueda_profundidad(city_map, orden_operadores, use_visitados=True):
             visitados.add(n.Status.get_values())
         
         expanded_nodes += 1
-        current_depth = len(n.Path) - 1
+        path = n.get_path()
+        current_depth = len(path) - 1
         if current_depth > max_depth:
             max_depth = current_depth
-        if len(n.Path) >= 2:
-            parent = n.Path[-2]
-            current = n.Path[-1]
+        if n.Parent is not None:
+            parent = n.Parent.Status.get_values()
+            current = n.Status.get_values()
             search_tree.append((parent[0], parent[1], current[0], current[1]))
         else:
-            current = n.Path[-1]
+            current = n.Status.get_values()
             search_tree.append((current[0], current[1], current[0], current[1]))
         
         if is_goal(city_map, n.Status, nPeople):
@@ -52,7 +51,7 @@ def busqueda_profundidad(city_map, orden_operadores, use_visitados=True):
             metrics = {
                 "expanded_nodes": expanded_nodes,
                 "max_depth": max_depth,
-                "solution_depth": len(n.Path) - 1,
+                "solution_depth": len(path) - 1,
                 "compute_time_ms": elapsed_ms,
             }
             return n, search_tree, metrics

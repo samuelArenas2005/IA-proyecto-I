@@ -1,8 +1,7 @@
 class Status:
-    def __init__(self,x,y,nPeoples, Peoples=None):
+    def __init__(self, x, y, Peoples=None):
         self.x = x
         self.y = y
-        self.nPeoples = nPeoples
         self.Peoples = Peoples if Peoples is not None else set()
     
     def get_values(self):
@@ -10,7 +9,7 @@ class Status:
 
 
 def is_goal(city_map, status, nPeople):
-    if city_map[status.x][status.y] == 5 and status.nPeoples == nPeople:
+    if city_map[status.x][status.y] == 5 and len(status.Peoples) == nPeople:
         return True
     
     return False
@@ -53,14 +52,19 @@ def is_locked_right(city_map,posX,posY):
     
     return False
 
-def is_cycle(status, route):
-    return status in route
+def is_cycle(status, node):
+    current = node
+    while current is not None:
+        if current.Status.get_values() == status:
+            return True
+        current = current.Parent
+    return False
 
-def add_person(city_map,posX,posY,people):
-    if city_map[posX][posY] == 4 and (posX,posY) not in people :
-        return 1
-    
-    return 0 
+def add_person(city_map, posX, posY, people):
+    if city_map[posX][posY] == 4 and (posX, posY) not in people:
+        return people | {(posX, posY)}
+
+    return people
 
 def add_cost(city_map,posX,posY):
     if city_map[posX][posY] == 3:

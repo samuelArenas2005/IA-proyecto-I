@@ -69,8 +69,8 @@ def get_nodo_raiz(city_map):
     res = get_ubication_start(city_map)
     if res:
         startX, startY = res
-        statusNodoRaiz = Status(startX, startY, 0, set())
-        nodoRaiz = Nodo(statusNodoRaiz, [statusNodoRaiz.get_values()], {statusNodoRaiz.get_values()}, set(), 0, None)
+        statusNodoRaiz = Status(startX, startY, set())
+        nodoRaiz = Nodo(statusNodoRaiz, set(), 0, None, Parent=None)
         return nodoRaiz
     return None
 
@@ -88,7 +88,7 @@ def limpiar_route_y_search_tree(busqueda_func, city_map):
     if not nodoMeta:
         return [], search_tree, metrics
 
-    ruta = nodoMeta.Path
+    ruta = nodoMeta.get_path()
     rutaLimpia = []
     for elem in ruta:
         rutaLimpia.append((elem[0], elem[1]))

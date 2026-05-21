@@ -421,9 +421,43 @@ body.light .btn-theme {
   overflow-y: auto;
   overflow-x: visible;
   pointer-events: none; /* Allows passing clicks in empty space */
+  scrollbar-gutter: stable both-edges;
+  padding-right: 4px;
 }
 .right-panels-container > * {
   pointer-events: auto; /* Restores clicks inside elements */
+}
+
+.right-panels-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.right-panels-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.right-panels-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.right-panels-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body.light .right-panels-container::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+body.light .right-panels-container::-webkit-scrollbar-thumb {
+  background: rgba(16, 24, 48, 0.16);
+}
+
+body.light .right-panels-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 24, 48, 0.30);
 }
 
 .tree-sketch-panel--expanded {

@@ -175,7 +175,7 @@ def obtener_informe_analitico():
 @eel.expose
 def obtener_ruta():
     """Calcula y retorna la ruta usando el algoritmo seleccionado."""
-    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE, LAST_ANALYTIC_REPORT,USAR_ALGORITMO_MEJORADO
+    global ALGORITMO_SELECCIONADO, ORDEN_OPERADORES_PROFUNDIDAD, LAST_SEARCH_TREE, LAST_ANALYTIC_REPORT , USAR_ALGORITMO_MEJORADO
     
     use_visitados = USAR_ALGORITMO_MEJORADO
     algoritmos = {

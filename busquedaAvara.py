@@ -12,9 +12,6 @@ def busqueda_avara(city_map, use_visitados=True):
     end_position = get_ubication_end(city_map)
     visitados = set()
     
-    if use_visitados:
-        print("Visitados Activo") 
-    
     expanded_nodes = 0
     max_depth = 0
     started = time.perf_counter()
@@ -40,15 +37,16 @@ def busqueda_avara(city_map, use_visitados=True):
             visitados.add(n.Status.get_values())
         
         expanded_nodes += 1
-        current_depth = len(n.Path) - 1
+        path = n.get_path()
+        current_depth = len(path) - 1
         if current_depth > max_depth:
             max_depth = current_depth
-        if len(n.Path) >= 2:
-            parent = n.Path[-2]
-            current = n.Path[-1]
+        if n.Parent is not None:
+            parent = n.Parent.Status.get_values()
+            current = n.Status.get_values()
             search_tree.append((parent[0], parent[1], current[0], current[1]))
         else:
-            current = n.Path[-1]
+            current = n.Status.get_values()
             search_tree.append((current[0], current[1], current[0], current[1]))
         
         if is_goal(city_map, n.Status, nPeople):
@@ -56,7 +54,7 @@ def busqueda_avara(city_map, use_visitados=True):
             metrics = {
                 "expanded_nodes": expanded_nodes,
                 "max_depth": max_depth,
-                "solution_depth": len(n.Path) - 1,
+                "solution_depth": len(path) - 1,
                 "compute_time_ms": elapsed_ms,
             }
             return n, search_tree, metrics
@@ -72,6 +70,6 @@ if __name__ == "__main__":
     nodoMeta, search_tree, _ = busqueda_avara(matriz_real)
     if nodoMeta:
         print(f"Éxito (Avara). Costo: {nodoMeta.Cost}")
-        print(f"Camino: {nodoMeta.Path}")
+        print(f"Camino: {nodoMeta.get_path()}")
     else:
         print("No se encontró solución para el mapa real.")
