@@ -1,11 +1,13 @@
 from Formulacion import *
+from ordered_set import OrderedSet
+
+           
 
 class Nodo:
     
-    def __init__(self, Status, Path, Route, People,Cost, Heuristic=None):
+    def __init__(self, Status, Path, People, Cost, Heuristic=None):
         self.Status = Status
-        self.Path = Path
-        self.Route = Route
+        self.Path = OrderedSet(Path)
         self.People = People
         self.Cost = Cost
         self.Heuristic = Heuristic
@@ -30,9 +32,11 @@ class Nodo:
                 new_posX, new_posY = posX + dx, posY + dy
                 people = add_person(city_map, new_posX, new_posY, self.People)
                 statusHijo = Status(new_posX, new_posY, people)
-                if not(is_cycle(statusHijo.get_values(), self.Route)):
+                if not is_cycle(statusHijo.get_values(), self.Path):
                     new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
-                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people, new_cost)
+                    new_path = self.Path.copy()
+                    new_path.add(statusHijo.get_values())
+                    nodoHijo = Nodo(statusHijo, new_path, people, new_cost)
                     nodosHijos.append(nodoHijo)
         
         return nodosHijos
@@ -73,12 +77,13 @@ class Nodo:
                 statusHijo = Status(new_posX, new_posY, people)
                 
                 # Evitar ciclos (ya implementado correctamente)
-                if not is_cycle(statusHijo.get_values(), self.Route):
+                if not is_cycle(statusHijo.get_values(), self.Path):
                     new_cost = self.Cost + add_cost(city_map, new_posX, new_posY)
+                    new_path = self.Path.copy()
+                    new_path.add(statusHijo.get_values())
                     nodoHijo = Nodo(
                         statusHijo,
-                        self.Path + [statusHijo.get_values()],
-                        self.Route | {statusHijo.get_values()},
+                        new_path,
                         people,
                         new_cost
                     )
@@ -107,13 +112,15 @@ class Nodo:
                 new_posX, new_posY = posX + dx, posY + dy
                 people = add_person(city_map, new_posX, new_posY, self.People)
                 statusHijo = Status(new_posX, new_posY, people)
-                if not(is_cycle(statusHijo.get_values(), self.Route)):
+                if not is_cycle(statusHijo.get_values(), self.Path):
                     new_cost = self.Cost + add_cost(city_map,new_posX,new_posY)
 
                     people_left_hijo  =  {p for p in people_position if p not in people}
                     heuristic = Nodo.calculate_heuristic(people_left_hijo , (new_posX, new_posY), end_position)
 
-                    nodoHijo = Nodo(statusHijo, self.Path + [statusHijo.get_values()], self.Route | {statusHijo.get_values()}, people, new_cost, heuristic)
+                    new_path = self.Path.copy()
+                    new_path.add(statusHijo.get_values())
+                    nodoHijo = Nodo(statusHijo, new_path, people, new_cost, heuristic)
                     nodosHijos.append(nodoHijo)
         
         return nodosHijos
