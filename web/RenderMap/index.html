@@ -88,12 +88,18 @@
           <div class="config-row__top">
             <div class="config-row__label">
               <label for="toggle-visitados">Usar algoritmo mejorado</label>
+              <button class="config-info-btn" id="btn-toggle-desc" title="Más info" onclick="window.toggleVisitadosDesc()">
+                <i class="fa-solid fa-circle-info"></i>
+              </button>
             </div>
             <label class="switch">
               <input id="toggle-visitados" type="checkbox" checked onchange="changeUseVisitados(this.checked)" />
               <span class="slider"></span>
             </label>
           </div>
+          <p class="config-row__desc" id="visitados-desc" style="display:none;">
+            Descarta estados ya explorados en otras ramas. Evita ciclos donde distintos caminos convergen en la misma casilla con el mismo estado.
+          </p>
         </div>
         <div>
           <label style="font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; display: block; font-weight: 600;">ELEGIR MAPA</label>

@@ -276,6 +276,15 @@ window.toggleConfig = function() {
   }
 };
 
+window.toggleVisitadosDesc = function() {
+  const desc = document.getElementById('visitados-desc');
+  const btn  = document.getElementById('btn-toggle-desc');
+  if (!desc) return;
+  const visible = desc.style.display !== 'none';
+  desc.style.display = visible ? 'none' : 'block';
+  if (btn) btn.style.color = visible ? '' : 'var(--accent)';
+};
+
 window.toggleTreeExpand = function() {
   const panel = document.getElementById('tree-sketch-panel');
   const icon = document.getElementById('icon-expand-tree');

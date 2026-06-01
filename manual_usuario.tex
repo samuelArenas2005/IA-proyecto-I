@@ -1,0 +1,170 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{a4paper, margin=2.5cm}
+
+\title{Manual de Usuario\\ \large Simulador de Rutas con Algoritmos de Búsqueda}
+\author{Proyecto IA}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Ejecutar el Programa}
+Para iniciar el simulador, es necesario ejecutar el archivo principal del proyecto. Abra una terminal o línea de comandos, diríjase al directorio principal del proyecto y ejecute el siguiente comando:
+\begin{verbatim}
+python main.py
+\end{verbatim}
+O en su defecto, dependiendo de la configuración de su entorno Python:
+\begin{verbatim}
+py main.py
+\end{verbatim}
+Esto iniciará el servidor local y abrirá automáticamente la ventana del navegador con el menú de la aplicación.
+
+\vspace{0.5cm}
+\noindent\textbf{Nota importante:} Para obtener más información sobre la estructura detallada del proyecto y la instalación de las dependencias requeridas, por favor consulte el archivo \texttt{README.md} incluido en este mismo directorio.
+
+\section{La Interfaz en General}
+La aplicación consta de un menú principal sencillo e interactivo desde el cual se configuran todos los parámetros y se lanza la simulación. La pantalla de inicio divide las funcionalidades en apartados claros para seleccionar el mapa, el vehículo y el algoritmo de Inteligencia Artificial que tomará las decisiones.
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.8\textwidth]{ruta/a/interfaz_general.png}
+    \caption{Vista de la interfaz general (Menú Principal / Escena).}
+\end{figure}
+
+\section{Elegir el Algoritmo de Búsqueda}
+Para elegir el algoritmo de búsqueda, navegue hasta la sección correspondiente en el menú principal. Podrá elegir entre:
+\begin{itemize}
+    \item Búsqueda por Amplitud
+    \item Búsqueda de Costo Uniforme
+    \item Búsqueda en Profundidad
+    \item Búsqueda Avara
+    \item Búsqueda A* (A-Estrella)
+\end{itemize}
+Para los algoritmos como Búsqueda en Profundidad, también hay una opción para configurar el orden de los operadores.
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/elegir_algoritmo.png}
+    \caption{Menú de selección del algoritmo de búsqueda.}
+\end{figure}
+
+\section{Elegir el Mapa}
+Dentro del panel del menú se encuentra el módulo para la ``Selección de Mapa''. Esta herramienta cargará los mundos ya existentes (archivos \texttt{.txt}). Simplemente elija de la lista el archivo correspondiente para establecer el entorno en el que se moverá el vehículo.
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/elegir_mapa.png}
+    \caption{Lista y selección de mapas listos para simular.}
+\end{figure}
+
+\section{Subir o Crear Mapas Nuevos}
+Si se desea poner a prueba el algoritmo en un mundo diferente, el programa cuenta con un editor y cargador de mapas. 
+\begin{enumerate}
+    \item Abra la sección del Editor de Mapas (CreateMap).
+    \item Puede subir un archivo de texto en formato matricial de $10 \times 10$, donde cada número representa diferentes elementos (0 para calle, 1 para muro, 2 para inicio, etc.).
+    \item O bien, puede utilizar la herramienta gráfica para ubicar las calles, los muros y la meta manualmente.
+    \item Al finalizar, guarde el mapa y este estará disponible de forma permanente.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/subir_mapa.png}
+    \caption{Herramienta para subir o editar mapas personalizados.}
+\end{figure}
+
+\section{Cambiar de Personajes (Vehículos)}
+El simulador ofrece la capacidad de usar distintos personajes o vehículos en el recorrido.
+\begin{enumerate}
+    \item Diríjase a la sección de selección de vehículos.
+    \item Visualizará los elementos cargados en el sistema (generalmente modelos 3D en formato \texttt{.glb} o similares).
+    \item Haga clic en el modelo que desea para aplicarlo. El simulador también permite incorporar nuevos modelos al directorio de manera sencilla.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/cambiar_vehiculo.png}
+    \caption{Interfaz de selección de vehículos y personajes.}
+\end{figure}
+
+\section{Ejecutar la Simulación}
+Una vez que el mapa, el vehículo y el algoritmo han sido configurados, puede iniciar la ejecución directamente en la vista del mapa en 3D.
+\begin{enumerate}
+    \item Haga clic en el botón verde de \textbf{Play (Reproducir)} en la barra lateral de controles para iniciar la evaluación del algoritmo y visualizar cómo el vehículo recorre la ruta encontrada hacia la meta.
+    \item Si desea reiniciar la animación del recorrido para observarlo nuevamente, simplemente presione este mismo botón de \textbf{Play} una vez más.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/ejecutar_simulacion.png}
+    \caption{Ejecución de la simulación mediante el botón Play.}
+\end{figure}
+
+\section{Controles y Opciones de Visualización}
+La vista tridimensional cuenta con un panel lateral que agrupa diversas herramientas para personalizar la manera en que observa la simulación:
+\begin{itemize}
+    \item \textbf{Día / Noche:} Cambia la iluminación global del escenario, alternando entre un ambiente iluminado de día y tonos oscuros de noche.
+    \item \textbf{Velocidad del Vehículo:} Haga clic en el indicador numérico (como \texttt{x1.0}) para aumentar o reducir la velocidad de la animación. Es útil acelerar el proceso visual en rutas muy largas.
+    \item \textbf{Punto de Vista de Cámara (POV):} El icono en forma de ojo alterna perspectivas de cámara. Puede pasar de una vista panorámica a seguimientos mucho más precisos del vehículo.
+    \item \textbf{Zoom In / Zoom Out:} Utilice los iconos de lupa predeterminados para acercar detalles o alejar el mapa y ver la ciudad completa de un vistazo (también puede lograrse girando la rueda del ratón/scroll).
+    \item \textbf{Restablecer Vista:} El botón con forma de casa devuelve inmediatamente la cámara y el zoom a sus valores y posiciones por defecto.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/controles_visualizacion.png}
+    \caption{Controles de visualización y modificación de cámara en la barra lateral.}
+\end{figure}
+
+\section{Informe Analítico y Árbol de Expansión}
+La principal característica didáctica del software es la evaluación del rendimiento del algoritmo y la visualización de su proceso interno.
+\begin{enumerate}
+    \item Una vez terminada la búsqueda o la simulación, y exactamente en el momento en que la animación del vehículo llegue a la casilla de la meta, el sistema develará la vista de resultados de manera automática.
+    \item La herramienta desplegará un panel con los datos y métricas en donde podrá consultar:
+    \begin{itemize}
+        \item \textbf{Nodos expandidos:} Cantidad de ramificaciones que procesó el algoritmo para encontrar la respuesta.
+        \item \textbf{Tiempo de cómputo:} Milisegundos tardados en hallar el camino óptimo.
+        \item \textbf{Costo de la solución:} Suma de casillas y dificultades transitadas en el mapa.
+        \item \textbf{Profundidad de la solución.}
+    \end{itemize}
+    \item A la par de estos datos, también se provee la vista gráfica del árbol de expansión, la cual mostrará el orden y el proceso de decisiones que siguió la inteligencia artificial de principio a fin.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/arbol_expansion.png}
+    \caption{Vista de datos al terminar el recorrido: informe analítico (costo, tiempo, nodos) y árbol de expansión.}
+\end{figure}
+
+\section{Cambiar de Mapa y de Algoritmo de Búsqueda}
+Se pueden encadenar diversas pruebas sin necesidad de reiniciar la aplicación:
+\begin{enumerate}
+    \item Para ejecutar una nueva simulación, regrese a la pantalla del menú por medio del botón para retroceder o salir de la simulación activa.
+    \item Seleccione un mapa diferente de la lista.
+    \item Seleccione un algoritmo de búsqueda distinto (ej. cambiar de Búsqueda por Amplitud a Búsqueda Avara).
+    \item Inicie la visualización. Estas acciones actualizarán las selecciones de inmediato, permitiendo una rápida comparación de algoritmos en diversos escenarios de mundos.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \centering
+    \vspace{6cm} % Espacio reservado para la imagen
+    % \includegraphics[width=0.7\textwidth]{ruta/a/reconfiguracion.png}
+    \caption{Reconfiguración ágil de mapas y algoritmos para nuevas pruebas.}
+\end{figure}
+
+\end{document}
