@@ -19,13 +19,11 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-2. Instalar Eel y OrderedSet:
+2. Instalar Eel:
 
 ```bash
 pip install eel
 ```
-
-> Nota: no existe `requirements.txt` en este repositorio, así que solo necesitas `eel` para ejecutar la interfaz y las búsquedas.
 
 ## Cómo ejecutar la prueba desde `main.py`
 
