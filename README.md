@@ -6,9 +6,10 @@ Este proyecto es un simulador de rutas en una ciudad isométrica usando intelige
 
 - Python 3.8+ instalado.
 - Paquete `eel` instalado en el entorno de Python.
-- - **Google Chrome o Chromium instalado** (Eel lo requiere para renderizar la interfaz de usuario).
+-  **Google Chrome o Chromium instalado** (Eel lo requiere para renderizar la interfaz de usuario).
   > **Nota para Linux:** Si no tienes ninguno de estos navegadores, puedes instalar Chromium fácilmente desde la terminal ejecutando:
   > `sudo apt install chromium-browser`
+- Acceso a wifi para acceder a la librería Tree.js y poder renderizar los modelos 3D
 
 ### Instalar dependencias
 
